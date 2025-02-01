@@ -10,11 +10,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Future;
+
+import static net.neoforged.neoforge.common.NeoForgeMod.CREATIVE_FLIGHT;
 
 
 @EventBusSubscriber(modid = "wowidbt")
@@ -81,7 +80,7 @@ public class DimEventRegister {
             return;
         }
         if (creativeFlightPlayers.contains(player)) {
-            player.getAbilities().mayfly = true;
+            Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(1.0);
             player.onUpdateAbilities();
             creativeFlightPlayers.remove(player);
         }
@@ -96,7 +95,7 @@ public class DimEventRegister {
             if (player.mayFly()) {
                 creativeFlightPlayers.add(player);
             }
-            player.getAbilities().mayfly = false;
+            Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(1.0);
             player.onUpdateAbilities();
             if (!noFlyZoneTasks.containsKey(player)) {
                 noFlyZoneTasks.put(player, Async.setInNoFlyZone(player));
@@ -106,7 +105,7 @@ public class DimEventRegister {
                 noFlyZoneTasks.get(player).cancel(true);
                 noFlyZoneTasks.remove(player);
                 if (creativeFlightPlayers.contains(player)) {
-                    player.getAbilities().mayfly = true;
+                    Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(1.0);
                     player.onUpdateAbilities();
                     creativeFlightPlayers.remove(player);
                 }

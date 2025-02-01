@@ -10,7 +10,10 @@ import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Future;
+
+import static net.neoforged.neoforge.common.NeoForgeMod.CREATIVE_FLIGHT;
 
 
 @EventBusSubscriber(modid = "wowidbt")
@@ -44,8 +47,8 @@ public class ItemEventRegister {
         }
         // If player is in no-fly zone,cancel the task
          if (DimEventRegister.noFlyZoneTasks.containsKey(player)) {
-            player.getAbilities().mayfly = false;
-            player.onUpdateAbilities();
+             Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(0.0);
+             player.onUpdateAbilities();
             if (creativeFlightPlayers.containsKey(player)) {
                 creativeFlightPlayers.get(player).cancel(true);
                 creativeFlightPlayers.remove(player);
@@ -60,7 +63,11 @@ public class ItemEventRegister {
                     break;
                 }
             }
-             player.getAbilities().mayfly = flyEnabled;
+            if (flyEnabled){
+                Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(1.0);
+            }else {
+                Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(0.0);
+            }
              player.onUpdateAbilities();
         }
         

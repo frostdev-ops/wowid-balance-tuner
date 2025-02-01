@@ -14,11 +14,13 @@ import net.minecraft.world.level.block.Block;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static com.frostdev.wowidbt.util.Getter.*;
+import static net.neoforged.neoforge.common.NeoForgeMod.CREATIVE_FLIGHT;
 
 public class Async {
 
@@ -52,7 +54,7 @@ public class Async {
             if (Getter.getEntitySpeed(player).get(Direction.Axis.Y) < 0.0 && !player.isFallFlying()) {
                 return;
             }
-            player.getAbilities().mayfly = false;
+            Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(0.0);
             player.stopFallFlying();
             player.onUpdateAbilities();
             BlockPos pos = player.blockPosition();
@@ -85,7 +87,7 @@ public class Async {
                 return;
             }
             if (player.getInventory().armor.stream().anyMatch(item -> Getter.getCreativeFlight().contains(item.getItem().toString()))) {
-                player.getAbilities().mayfly = true;
+                Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(1.0);
                 player.onUpdateAbilities();
             }
         };
