@@ -1,4 +1,3 @@
-```markdown
 # WoWID Balance Tuner
 
 WoWID Balance Tuner is a Minecraft mod that allows server administrators to manage and balance player abilities, specifically focusing on creative flight permissions in different dimensions.
@@ -41,5 +40,3 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ## Contact
 
 For any questions or issues, please open an issue on GitHub or contact the project maintainer.
-
-```
