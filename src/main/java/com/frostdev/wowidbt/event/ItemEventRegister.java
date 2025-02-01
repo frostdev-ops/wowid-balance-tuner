@@ -2,7 +2,6 @@ package com.frostdev.wowidbt.event;
 
 import com.frostdev.wowidbt.util.Async;
 import com.frostdev.wowidbt.util.Getter;
-import com.frostdev.wowidbt.wowidbt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -13,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-import static com.frostdev.wowidbt.util.Logg.*;
 
 @EventBusSubscriber(modid = "wowidbt")
 public class ItemEventRegister {
@@ -30,9 +28,6 @@ public class ItemEventRegister {
         }
     }
 
-    public static Map<Player, Future<?>> getCreativeFlightPlayers() {
-        return creativeFlightPlayers;
-    }
 
     private static void handleItemFlightLogic(Player player, boolean flyEnabled) {
         if (!flyEnabled) {
@@ -58,18 +53,15 @@ public class ItemEventRegister {
             
         } else {
             for (ItemStack item : player.getInventory().armor.stream().toList()) {
-                wowidbt.log("Checking item: " + item.getItem());
                 // If player has creative flight item, set to fly
                 if (Getter.getCreativeFlight().contains(item.getItem().toString())) {
                     creativeFlightPlayers.put(player, Async.setToFly(player));
                     flyEnabled = true;
-                    wowidbt.log(LOG_SET_TO_FLY);
                     break;
                 }
             }
              player.getAbilities().mayfly = flyEnabled;
              player.onUpdateAbilities();
-             wowidbt.LOGGER.info("Fly enabled: {}", flyEnabled);
         }
         
     }

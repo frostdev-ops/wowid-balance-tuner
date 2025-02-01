@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.AirBlock;
@@ -15,16 +14,11 @@ import net.minecraft.world.level.block.Block;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static com.frostdev.wowidbt.util.Getter.*;
-import static com.frostdev.wowidbt.util.Logg.*;
-import static java.lang.Thread.sleep;
-import static org.openjdk.nashorn.internal.runtime.regexp.joni.Syntax.Java;
 
 public class Async {
 
@@ -45,7 +39,6 @@ public class Async {
         getExecutor().schedule(() -> {
             if (entity.getHealth() != entity.getMaxHealth()) {
                 entity.setHealth(entity.getMaxHealth());
-                wowidbt.log("Mob spawned with less than max health, setting health to max");
             }
         }, 1, java.util.concurrent.TimeUnit.SECONDS);
     }
@@ -79,7 +72,6 @@ public class Async {
                 if (!(block instanceof AirBlock)){
                     player.teleportTo(pos.above().getX(), pos.above().getY(), pos.above().getZ());
                     player.displayClientMessage(net.minecraft.network.chat.Component.literal("Flying is not allowed here!").withColor(11141120), true); // Send player message
-                    wowidbt.log("Player is no longer flying");
                     break;
                 }
             }
@@ -89,15 +81,12 @@ public class Async {
 
     private static Runnable whileEquipped(Player player) {
         return () -> {
-            wowidbt.log("Start of creative flight tick for player " + player.getName());
             if (DimEventRegister.noFlyZoneTasks.containsKey(player)) {
-                wowidbt.log(LOG_STILL_IN_NFZ+ " for player " + player.getName() + " in dim " + Getter.getDimName(player.level()) + " suspending flight");
                 return;
             }
             if (player.getInventory().armor.stream().anyMatch(item -> Getter.getCreativeFlight().contains(item.getItem().toString()))) {
                 player.getAbilities().mayfly = true;
                 player.onUpdateAbilities();
-                wowidbt.log(LOG_SET_TO_FLY);
             }
         };
     }

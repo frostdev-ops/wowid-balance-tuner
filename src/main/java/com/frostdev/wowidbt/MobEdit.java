@@ -7,7 +7,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 
 import java.util.Random;
-import java.util.random.RandomGenerator;
 
 
 public class MobEdit {
@@ -52,14 +51,16 @@ public class MobEdit {
                     negativeVariance = false;
                     value = value * -1;
                 }
-                wowidbt.log("Min variance: " + varianceMIN + " Max variance: " + varianceMAX);
-                wowidbt.LOGGER.info("Setting attribute {} to value {}", attribute, value);
                 attributeInstance.setBaseValue(value);
                 if (attribute.contains("max_health")) {
                     livingEntity.setHealth((float) value);
                 }
             } else {
-                wowidbt.log("Attribute " + attribute + " does not exist or LivingEntity is null");
+                if (livingEntity != null) {
+                    wowidbt.log("Attribute " + attribute + " does not exist for entity " + livingEntity.getName().getString());
+                } else {
+                    wowidbt.log("LivingEntity is null");
+                }
             }
         }
     }
