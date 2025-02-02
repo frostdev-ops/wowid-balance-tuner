@@ -2,17 +2,22 @@ package com.frostdev.wowidbt;
 
 import com.frostdev.wowidbt.util.Async;
 import com.frostdev.wowidbt.util.Getter;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
-import net.neoforged.neoforge.event.server.ServerStoppingEvent;
-import org.slf4j.Logger;
+import com.frostdev.wowidbt.util.modify.Modifier;
 import com.mojang.logging.LogUtils;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import org.slf4j.Logger;
 
 @Mod(wowidbt.MODID)
 public class wowidbt
@@ -24,9 +29,12 @@ public class wowidbt
         LOGGER.info(LOG_PREFIX + "{}", message);}
 
     private static final String LOG_PREFIX = "[WOWID Balance Tuner] ";
-    public wowidbt(IEventBus modEventBus, ModContainer modContainer)
+    public wowidbt(IEventBus bus, ModContainer modContainer)
     {
-        modEventBus.addListener(this::commonSetup);
+        bus.addListener(this::commonSetup);
+        bus.addListener(EventPriority.LOWEST, EntityAttributeModificationEvent.class, Modifier::entityAttributeModification);
+        bus.addListener(EventPriority.LOWEST, ModifyDefaultComponentsEvent.class,     Modifier::modifyDefaultComponents);
+        bus.addListener(EventPriority.LOWEST, FMLLoadCompleteEvent.class,             Modifier::loadComplete);
         Getter.safeInit(true);
         log("Getter initialized: " + Getter.isJsonInitialized());
         NeoForge.EVENT_BUS.register(this);

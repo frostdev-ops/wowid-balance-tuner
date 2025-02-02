@@ -24,3 +24,10 @@ runs
 run-data
 
 repo
+pyinstaller.py
+.credentials_cache
+dist/Frostdev Property Modifier.exe
+frost3.ico
+Frostdev Property Modifier.spec
+*.py
+local_cache_items.json5

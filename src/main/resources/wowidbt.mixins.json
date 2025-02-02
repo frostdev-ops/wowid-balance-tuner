@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "package": "com.frostdev.wowidbt.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "wowidbt.refmap.json",
+  "mixins": [
+    "MixinCommonHook"
+  ],
+  "minVersion": "1.0"
+}
