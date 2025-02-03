@@ -1,5 +1,6 @@
 package com.frostdev.wowidbt;
 
+import com.frostdev.wowidbt.event.MobEventRegister;
 import com.frostdev.wowidbt.util.Async;
 import com.frostdev.wowidbt.util.Getter;
 import com.frostdev.wowidbt.util.modify.Modifier;
@@ -77,22 +78,20 @@ public class wowidbt
                 }
             }
         }
-        /*
-        oops I broke it
-        if (Getter.areTiersDefined()){
-            for (int tier : Getter.getTiers().keySet()){
-                log("Tier: " + tier);
-                for (String att : Getter.getTiers().get(tier).keySet()){
-                    log(att + " : " + Getter.getTiers().get(tier).get(att) + "variance: " + Getter.getTierVariance(tier));
-                }
-            }
+        if (Getter.isBlackListDefined()) {
+            log("AutoBlacklist is defined");
+            Getter.loadBlackList();
+            log("AutoBlacklist loaded");
         }
 
-         */
 
     }
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event){
+        if (!MobEventRegister.attributeBlacklist.isEmpty()) {
+            log("Writing AutoBlacklist to file");
+            Getter.writeBlackListToFile(MobEventRegister.attributeBlacklist);
+        }
         Async.cancelAllTasks();
         wowidbt.log("All tasks cancelled");
         wowidbt.log("Bye bye!");

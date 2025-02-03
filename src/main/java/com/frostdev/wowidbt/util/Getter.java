@@ -1,11 +1,15 @@
 package com.frostdev.wowidbt.util;
 
+import com.frostdev.wowidbt.event.MobEventRegister;
 import com.frostdev.wowidbt.wowidbt;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.WorldGenLevel;
@@ -13,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -222,8 +227,15 @@ public class Getter {
                             }
                             return false;
                     }
+                        if (current.has(key) && key.equals(keys[keys.length - 1])) {
+                            if (getDebug()) {
+                                wowidbt.log("variance definition found for: " + key);
+                            }
+                            return true;
+                        }
                         JsonElement element = current.get(key);
-                        if (!(element instanceof JsonObject)) {
+
+                        if (!element.isJsonObject()) {
                             if (getDebug()) {
                                 wowidbt.log("Element is not a JsonObject: " + key);
                             }
@@ -231,11 +243,7 @@ public class Getter {
                         }
                         current = element.getAsJsonObject();
                     }
-                    boolean hasKey = current.has(keys[keys.length - 1]);
-                    if (getDebug()) {
-                        wowidbt.log("Final key check: " + keys[keys.length - 1] + " - " + hasKey);
-                    }
-                    return hasKey;
+                    return true;
                 })
                 .orElse(false);
     }
@@ -365,4 +373,51 @@ public class Getter {
     public static boolean doesMobHaveOverrides(String dimension, String mob) {
         return hasKey("dimensions", dimension, "overrides", mob);
     }
+
+    public static boolean isBlackListDefined() {
+        File file = new File("config/wowid/entity_blacklist.json");
+        return file.exists();
+    }
+
+    public static void loadBlackList() {
+        File file = new File("config/wowid/entity_blacklist.json");
+        if (MobEventRegister.attributeBlacklist == null) {
+            MobEventRegister.attributeBlacklist = new HashMap<>();
+        }
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+                JsonArray jsonArray = entry.getValue().getAsJsonArray();
+                List<String> list = new ArrayList<>();
+                for (JsonElement element : jsonArray) {
+                    list.add(element.getAsString());
+                }
+                MobEventRegister.attributeBlacklist.put(BuiltInRegistries.ENTITY_TYPE.byId(Integer.parseInt(entry.getKey())), list);
+            }
+        } catch (IOException e) {
+            wowidbt.log("Error reading blacklist from entity_blacklist.json: " + e.getMessage());
+        }
+    }
+    public static void writeBlackListToFile(Map<EntityType<?>, List<String>> blackList) {
+        File file = new File("config/wowid/entity_blacklist.json");
+        JsonObject json = new JsonObject();
+
+        for (Map.Entry<EntityType<?>, List<String>> entry : blackList.entrySet()) {
+            json.add(String.valueOf(Integer.parseInt(String.valueOf(BuiltInRegistries.ENTITY_TYPE.getId(entry.getKey())))), entry.getValue().stream()
+                    .collect(JsonArray::new, JsonArray::add, JsonArray::addAll));
+        }
+
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(json.toString());
+            if (getDebug()) {
+                wowidbt.log("Blacklist written to entity_blacklist.json");
+            }
+        } catch (IOException e) {
+            if (getDebug()) {
+                wowidbt.log("Error writing blacklist to entity_blacklist.json: " + e.getMessage());
+            }
+        }
+    }
+
+
 }

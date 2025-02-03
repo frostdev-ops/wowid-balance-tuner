@@ -29,7 +29,7 @@ public class MobEventRegister {
         return Getter.getDebug();
     }
 
-    public static Map<EntityType, List<String>> attributeBlacklist = new HashMap<>();
+    public static Map<EntityType<?>, List<String>> attributeBlacklist = new HashMap<>();
 
     @SubscribeEvent
     public static void onMobSpawn(EntityJoinLevelEvent event) {

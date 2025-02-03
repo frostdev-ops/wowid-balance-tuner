@@ -70,14 +70,14 @@ public class MobEdit {
                 }
             } else {
                 if (Getter.getDebug()){
-                    wowidbt.log("Attribute " + attribute + " not found for entity " + livingEntity.getType() + " adding to blacklist. If you see a message again for this entity and attribute before restart, something is horribly wrong. Please report it to the mod author.");
+                    wowidbt.log("Attribute " + attribute + " not found for entity " + livingEntity.getType() + " adding to blacklist. If you see a message again for this entity and attribute without clearing the blacklist file, something is horribly wrong. Please report it to the mod author.");
                 }
                 attributeBlacklistAdd(attribute);
         }
 
         } catch (Exception e) {
             if (Getter.getDebug()){
-                wowidbt.log("Attribute " + attribute + " not found for entity " + livingEntity.getType() + " adding to blacklist. If you see a message again for this entity and attribute before restart, something is horribly wrong. Please report it to the mod author.");
+                wowidbt.log("Attribute " + attribute + " not found for entity " + livingEntity.getType() + " adding to blacklist. If you see a message again for this entity and attribute without clearing the blacklist file, something is horribly wrong. Please report it to the mod author.");
             }
             attributeBlacklistAdd(attribute);
         }
