@@ -234,8 +234,8 @@ public class Getter {
         return hasKey("tiers");
     }
 
-    public static boolean dimHasTiers(String dimension) {
-        return hasKey("dimensions", dimension, "tier");
+    public static boolean dimHasTier(String dimension) {
+        return jsonObject.getAsJsonObject(dimension).has("tier");
     }
     public static Map<Integer, Map<String, Double>> getTiers() {
         safeInit(true);
@@ -252,12 +252,24 @@ public class Getter {
 
     private static boolean hasKey(String... keys) {
         safeInit(true);
+        if (getDebug()) {
+            wowidbt.log("hasKey called with keys: " + Arrays.toString(keys));
+        }
         return Optional.ofNullable(jsonObject)
                 .map(obj -> {
                     JsonObject current = obj;
                     for (String key : keys) {
-                        current = current.getAsJsonObject(key);
-                        if (current == null) return false;
+                        if (getDebug()) {
+                            wowidbt.log("Checking key: " + key);
+                        }
+                        JsonElement element = current.get(key);
+                        if (!(element instanceof JsonObject)) {
+                            if (getDebug()) {
+                                wowidbt.log("Key not found or not a JsonObject: " + key);
+                            }
+                            return false;
+                        }
+                        current = element.getAsJsonObject();
                     }
                     return true;
                 })

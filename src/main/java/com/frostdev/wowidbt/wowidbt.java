@@ -67,6 +67,9 @@ public class wowidbt
         if (!Getter.getDimensions().isEmpty()){
             for (String dim : Getter.getDimensions()){
                 log("Dimension: " + dim);
+                if (Getter.dimHasTier(dim)){
+                    log("Tier: " + Getter.getTier(dim));
+                }
                 if(Getter.hasAttributes(dim)){
                     for (String attr : Getter.getAttributes(dim).keySet()){
                         log("Attribute: " + attr);

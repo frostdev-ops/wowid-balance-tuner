@@ -147,7 +147,7 @@ public class MobEventRegister {
         if (debug) {
             wowidbt.log("handleTierAttributes called for entity: " + entity.getName() + " in dimension: " + dimensionName);
         }
-        if (!Getter.areTiersDefined() || !Getter.dimHasTiers(dimensionName)) {
+        if (!Getter.areTiersDefined() || !Getter.dimHasTier(dimensionName)) {
             if (debug) {
             wowidbt.log("Tiers not defined for dimension: " + dimensionName);
             }
@@ -216,9 +216,7 @@ public class MobEventRegister {
 
     @SubscribeEvent
     public static void onFrogAttack(LivingIncomingDamageEvent event) {
-        if (debug) {
-            wowidbt.log("onFrogAttack triggered for entity: " + event.getEntity().getName());
-        }
+
         if (event.getSource().getEntity() instanceof Frog && event.getEntity() instanceof MagmaCube) {
             if (debug) {
                 wowidbt.log("Frog attacking MagmaCube - setting MagmaCube health to 0");
