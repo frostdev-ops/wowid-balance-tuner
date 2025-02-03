@@ -6,8 +6,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.neoforged.neoforge.common.Tags;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,37 +39,43 @@ public class MobEdit {
     }
 
     public void setAttribute(String attribute, double value) {
-        if (livingEntity == null) return;
+        try {
+            AttributeInstance attributeInstance = livingEntity.getAttribute(BuiltInRegistries.ATTRIBUTE.getHolderOrThrow(
+                    ResourceKey.create(BuiltInRegistries.ATTRIBUTE.key(), ResourceLocation.parse(attribute))));
 
-        AttributeInstance attributeInstance = livingEntity.getAttribute(BuiltInRegistries.ATTRIBUTE.getHolderOrThrow(
-                ResourceKey.create(BuiltInRegistries.ATTRIBUTE.key(), ResourceLocation.parse(attribute))));
+            if (attributeInstance != null) {
+                if (value < 0) {
+                    value = -value;
+                    this.negativeValue = true;
+                }
 
-        if (attributeInstance != null) {
-            if (value < 0) {
-                value = -value;
-                this.negativeValue = true;
-            }
+                if (varianceMAX > 0) {
+                    double varianceMIN = new Random().nextDouble(varianceMAX) / 2;
+                    value += new Random().nextDouble(varianceMIN, varianceMAX);
+                }
 
-            if (varianceMAX > 0) {
-                double varianceMIN = new Random().nextDouble(varianceMAX) / 2;
-                value += new Random().nextDouble(varianceMIN, varianceMAX);
-            }
+                if (negativeVariance || negativeValue) {
+                    value = -value;
+                    negativeVariance = false;
+                    negativeValue = false;
+                }
 
-            if (negativeVariance || negativeValue) {
-                value = -value;
-                negativeVariance = false;
-                negativeValue = false;
-            }
+                attributeInstance.setBaseValue(value);
+                if(Getter.getDebug()){
+                    wowidbt.log("Attribute " + attribute + " set to " + value + " for entity " + livingEntity.getType());
+                }
 
-            attributeInstance.setBaseValue(value);
-            if(Getter.getDebug()){
-                wowidbt.log("Attribute " + attribute + " set to " + value + " for entity " + livingEntity.getType());
-            }
+                if (attribute.contains("max_health")) {
+                    livingEntity.setHealth((float) value);
+                }
+            } else {
+                if (Getter.getDebug()){
+                    wowidbt.log("Attribute " + attribute + " not found for entity " + livingEntity.getType() + " adding to blacklist. If you see a message again for this entity and attribute before restart, something is horribly wrong. Please report it to the mod author.");
+                }
+                attributeBlacklistAdd(attribute);
+        }
 
-            if (attribute.contains("max_health")) {
-                livingEntity.setHealth((float) value);
-            }
-        } else {
+        } catch (Exception e) {
             if (Getter.getDebug()){
                 wowidbt.log("Attribute " + attribute + " not found for entity " + livingEntity.getType() + " adding to blacklist. If you see a message again for this entity and attribute before restart, something is horribly wrong. Please report it to the mod author.");
             }
@@ -76,12 +84,12 @@ public class MobEdit {
     }
 
     private void attributeBlacklistAdd(String attribute) {
-        if (MobEventRegister.attributeBlacklist.containsKey(livingEntity)) {
-            MobEventRegister.attributeBlacklist.get(livingEntity).add(attribute);
+        if (MobEventRegister.attributeBlacklist.containsKey(livingEntity.getType())) {
+            MobEventRegister.attributeBlacklist.get(livingEntity.getType()).add(attribute);
         } else {
             List<String> attributes = new ArrayList<>();
             attributes.add(attribute);
-            MobEventRegister.attributeBlacklist.put(livingEntity, attributes);
+            MobEventRegister.attributeBlacklist.put(livingEntity.getType(), attributes);
         }
     }
 }

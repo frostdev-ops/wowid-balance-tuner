@@ -5,6 +5,7 @@ import com.frostdev.wowidbt.util.Async;
 import com.frostdev.wowidbt.util.Getter;
 import com.frostdev.wowidbt.wowidbt;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ambient.AmbientCreature;
 import net.minecraft.world.entity.animal.frog.Frog;
@@ -24,18 +25,19 @@ import static com.frostdev.wowidbt.util.Getter.getDimName;
 @EventBusSubscriber(modid = "wowidbt")
 public class MobEventRegister {
 
-    private static final boolean debug = Getter.getDebug(); // Global debug flag
-    public static Map<Entity, List<String>> attributeBlacklist = new HashMap<>();
+    private static boolean isDebug() {
+        return Getter.getDebug();
+    }
+
+    public static Map<EntityType, List<String>> attributeBlacklist = new HashMap<>();
 
     @SubscribeEvent
     public static void onMobSpawn(EntityJoinLevelEvent event) {
         Entity entity = event.getEntity();
-        if (debug) {
-            wowidbt.log("onMobSpawn triggered for entity: " + entity.getName());
-        }
         if (!(entity instanceof LivingEntity) || entity instanceof Player || entity instanceof AmbientCreature) {
             return;
         }
+        boolean debug = isDebug();
 
         if (debug) {
             wowidbt.log("EntityJoinLevelEvent triggered for entity: " + entity.getName() + "-------------------------------------------------------------");
@@ -67,6 +69,7 @@ public class MobEventRegister {
     }
 
     private static boolean handleGlobalOverrides(Entity entity) {
+        boolean debug = isDebug();
         if (debug) {
             wowidbt.log("handleGlobalOverrides called for entity: " + entity.getName());
         }
@@ -92,6 +95,7 @@ public class MobEventRegister {
     }
 
     private static boolean handleDimensionOverrides(Entity entity, String dimensionName, String mobName) {
+        boolean debug = isDebug();
         if (debug) {
             wowidbt.log("handleDimensionOverrides called for entity: " + entity.getName() + " in dimension: " + dimensionName);
         }
@@ -117,6 +121,7 @@ public class MobEventRegister {
     }
 
     private static boolean handleDimensionAttributes(Entity entity, String dimensionName) {
+        boolean debug = isDebug();
         if (debug) {
             wowidbt.log("handleDimensionAttributes called for entity: " + entity.getName() + " in dimension: " + dimensionName);
         }
@@ -144,6 +149,7 @@ public class MobEventRegister {
     }
 
     private static boolean handleTierAttributes(Entity entity, String dimensionName) {
+        boolean debug = isDebug();
         if (debug) {
             wowidbt.log("handleTierAttributes called for entity: " + entity.getName() + " in dimension: " + dimensionName);
         }
@@ -187,6 +193,7 @@ public class MobEventRegister {
                         wowidbt.log("Attribute blacklisted: " + attribute + " for entity: " + entity.getName());
                         continue;
                     }
+                    if(debug)wowidbt.log("Checking for variance for attribute: " + attribute + " in tier: " + tier);
                     if (Getter.tierAttributeHasVariance(tier, attribute)) {
                         wowidbt.log("Variance found for attribute: " + attribute + " in tier: " + tier);
                         editor.setVariance(Getter.getTierVariance(tier).get(attribute));
@@ -198,7 +205,7 @@ public class MobEventRegister {
                     editor.setAttribute(attribute, Getter.getTierAttributes(dimensionName).get(attribute));
                 }
             } catch (Exception e) {
-                wowidbt.log("Error setting attributes for entity: " + e.getCause());
+                wowidbt.log("Error setting attributes for entity: " + e);
             }
             Async.setHealthAsync((LivingEntity) entity);
             return true;
@@ -208,16 +215,25 @@ public class MobEventRegister {
     }
 
     private static boolean isAttributeBlacklisted(Entity entity, String attribute) {
+        boolean debug = isDebug();
         if (debug) {
             wowidbt.log("isAttributeBlacklisted called for entity: " + entity.getName() + " with attribute: " + attribute);
         }
-        return attributeBlacklist.containsKey(entity) && attributeBlacklist.get(entity).contains(attribute);
+        if (attributeBlacklist.containsKey(entity)) {
+            if (attributeBlacklist.get(entity).contains(attribute)) {
+                if (debug) {
+                    wowidbt.log("Attribute: " + attribute + " is blacklisted for entity: " + entity.getName());
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     @SubscribeEvent
     public static void onFrogAttack(LivingIncomingDamageEvent event) {
-
         if (event.getSource().getEntity() instanceof Frog && event.getEntity() instanceof MagmaCube) {
+            boolean debug = isDebug();
             if (debug) {
                 wowidbt.log("Frog attacking MagmaCube - setting MagmaCube health to 0");
             }

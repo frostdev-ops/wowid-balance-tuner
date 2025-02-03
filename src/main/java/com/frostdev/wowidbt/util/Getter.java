@@ -206,14 +206,36 @@ public class Getter {
 
     private static @NotNull Boolean hasVariance(String... keys) {
         safeInit(true);
+        if (getDebug()) {
+            wowidbt.log("hasVariance called with keys: " + Arrays.toString(keys));
+        }
         return Optional.ofNullable(jsonObject)
                 .map(obj -> {
                     JsonObject current = obj;
                     for (String key : keys) {
-                        current = current.getAsJsonObject(key);
-                        if (current == null) return false;
+                        if (getDebug()) {
+                            wowidbt.log("Checking key: " + key);
+                        }
+                        if (!current.has(key)) {
+                            if (getDebug()) {
+                                wowidbt.log("Key not found: " + key);
+                            }
+                            return false;
                     }
-                    return current.has(keys[keys.length - 1]);
+                        JsonElement element = current.get(key);
+                        if (!(element instanceof JsonObject)) {
+                            if (getDebug()) {
+                                wowidbt.log("Element is not a JsonObject: " + key);
+                            }
+                            return false;
+                        }
+                        current = element.getAsJsonObject();
+                    }
+                    boolean hasKey = current.has(keys[keys.length - 1]);
+                    if (getDebug()) {
+                        wowidbt.log("Final key check: " + keys[keys.length - 1] + " - " + hasKey);
+                    }
+                    return hasKey;
                 })
                 .orElse(false);
     }
@@ -235,7 +257,7 @@ public class Getter {
     }
 
     public static boolean dimHasTier(String dimension) {
-        return jsonObject.getAsJsonObject(dimension).has("tier");
+        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).has("tier");
     }
     public static Map<Integer, Map<String, Double>> getTiers() {
         safeInit(true);
@@ -333,21 +355,7 @@ public class Getter {
     }
 
     public static Integer getTier(String dimension) {
-        return getIntFromJson("dimensions", dimension, "tier");
-    }
-
-    private static Integer getIntFromJson(String... keys) {
-        safeInit(true);
-        return Optional.ofNullable(jsonObject)
-                .map(obj -> {
-                    JsonObject current = obj;
-                    for (String key : keys) {
-                        current = current.getAsJsonObject(key);
-                        if (current == null) return 0;
-                    }
-                    return current.get(keys[keys.length - 1]).getAsInt();
-                })
-                .orElse(0);
+        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).get("tier").getAsInt();
     }
 
     public static boolean hasOverrides(String dimension) {
