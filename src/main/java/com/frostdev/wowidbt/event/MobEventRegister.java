@@ -30,6 +30,9 @@ public class MobEventRegister {
     @SubscribeEvent
     public static void onMobSpawn(EntityJoinLevelEvent event) {
         Entity entity = event.getEntity();
+        if (debug) {
+            wowidbt.log("onMobSpawn triggered for entity: " + entity.getName());
+        }
         if (!(entity instanceof LivingEntity) || entity instanceof Player || entity instanceof AmbientCreature) {
             return;
         }
@@ -64,6 +67,9 @@ public class MobEventRegister {
     }
 
     private static boolean handleGlobalOverrides(Entity entity) {
+        if (debug) {
+            wowidbt.log("handleGlobalOverrides called for entity: " + entity.getName());
+        }
         if (!Getter.hasGlobalOverrides() || !Getter.mobHasGlobalOverrides(Getter.getGenericEntityType(entity))) {
             return false;
         }
@@ -86,6 +92,9 @@ public class MobEventRegister {
     }
 
     private static boolean handleDimensionOverrides(Entity entity, String dimensionName, String mobName) {
+        if (debug) {
+            wowidbt.log("handleDimensionOverrides called for entity: " + entity.getName() + " in dimension: " + dimensionName);
+        }
         if (!Getter.hasOverrides(dimensionName) || !Getter.doesMobHaveOverrides(dimensionName, mobName)) {
             return false;
         }
@@ -108,6 +117,9 @@ public class MobEventRegister {
     }
 
     private static boolean handleDimensionAttributes(Entity entity, String dimensionName) {
+        if (debug) {
+            wowidbt.log("handleDimensionAttributes called for entity: " + entity.getName() + " in dimension: " + dimensionName);
+        }
         if (!Getter.hasAttributes(dimensionName)) {
             return false;
         }
@@ -132,12 +144,21 @@ public class MobEventRegister {
     }
 
     private static boolean handleTierAttributes(Entity entity, String dimensionName) {
+        if (debug) {
+            wowidbt.log("handleTierAttributes called for entity: " + entity.getName() + " in dimension: " + dimensionName);
+        }
         if (!Getter.areTiersDefined() || !Getter.dimHasTiers(dimensionName)) {
+            if (debug) {
+            wowidbt.log("Tiers not defined for dimension: " + dimensionName);
+            }
             return false;
         }
 
         int tier = Getter.getTier(dimensionName);
         if (Getter.hasTierOverrides(tier)) {
+            if (debug) {
+            wowidbt.log("Tier overrides found for tier: " + tier);
+            }
             MobEdit editor = new MobEdit(entity);
             try {
                 for (String attribute : Getter.getTierOverrides().get(tier).keySet()) {
@@ -156,16 +177,24 @@ public class MobEventRegister {
         }
 
         if (Getter.hasTierAttributes(tier)) {
+            if (debug) {
+            wowidbt.log("Tier attributes found for tier: " + tier);
+            }
             MobEdit editor = new MobEdit(entity);
             try {
                 for (String attribute : Getter.getTierAttributes(dimensionName).keySet()) {
-                    if (isAttributeBlacklisted(entity, attribute)) continue;
-
+                    if (isAttributeBlacklisted(entity, attribute)){
+                        wowidbt.log("Attribute blacklisted: " + attribute + " for entity: " + entity.getName());
+                        continue;
+                    }
                     if (Getter.tierAttributeHasVariance(tier, attribute)) {
+                        wowidbt.log("Variance found for attribute: " + attribute + " in tier: " + tier);
                         editor.setVariance(Getter.getTierVariance(tier).get(attribute));
                     } else if (Getter.globalAttributeHasVariance(attribute)) {
+                        wowidbt.log("Variance found for attribute: " + attribute + " in global");
                         editor.setVariance(Getter.getGlobalVariance(attribute));
                     }
+                    wowidbt.log("Setting attribute: " + attribute + " to: " + Getter.getTierAttributes(dimensionName).get(attribute));
                     editor.setAttribute(attribute, Getter.getTierAttributes(dimensionName).get(attribute));
                 }
             } catch (Exception e) {
@@ -179,11 +208,17 @@ public class MobEventRegister {
     }
 
     private static boolean isAttributeBlacklisted(Entity entity, String attribute) {
+        if (debug) {
+            wowidbt.log("isAttributeBlacklisted called for entity: " + entity.getName() + " with attribute: " + attribute);
+        }
         return attributeBlacklist.containsKey(entity) && attributeBlacklist.get(entity).contains(attribute);
     }
 
     @SubscribeEvent
     public static void onFrogAttack(LivingIncomingDamageEvent event) {
+        if (debug) {
+            wowidbt.log("onFrogAttack triggered for entity: " + event.getEntity().getName());
+        }
         if (event.getSource().getEntity() instanceof Frog && event.getEntity() instanceof MagmaCube) {
             if (debug) {
                 wowidbt.log("Frog attacking MagmaCube - setting MagmaCube health to 0");

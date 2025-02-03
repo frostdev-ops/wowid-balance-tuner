@@ -1,6 +1,7 @@
 package com.frostdev.wowidbt;
 
 import com.frostdev.wowidbt.event.MobEventRegister;
+import com.frostdev.wowidbt.util.Getter;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -59,11 +60,17 @@ public class MobEdit {
             }
 
             attributeInstance.setBaseValue(value);
+            if(Getter.getDebug()){
+                wowidbt.log("Attribute " + attribute + " set to " + value + " for entity " + livingEntity.getType());
+            }
 
             if (attribute.contains("max_health")) {
                 livingEntity.setHealth((float) value);
             }
         } else {
+            if (Getter.getDebug()){
+                wowidbt.log("Attribute " + attribute + " not found for entity " + livingEntity.getType() + " adding to blacklist. If you see a message again for this entity and attribute before restart, something is horribly wrong. Please report it to the mod author.");
+            }
             attributeBlacklistAdd(attribute);
         }
     }
