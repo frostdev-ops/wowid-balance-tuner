@@ -118,11 +118,11 @@ Here is an example of how to configure `wowidbt.json`:
 
 ## Usage
 - **pirority**: The mod will prioritize the most specific configuration for an entity. For example, if an entity has a global override and a dimension override, the dimension override will take precedence.
+- **overrides**: Overrides are used to apply specific modifications to certain entities. For example, if you want to increase the max health of zombies in the overworld, you can create an override for zombies in the overworld.
+- **attributes**: Attributes are the base values for entities. For example, if you want all entities in the overworld to have a max health of 40, you can set the max health attribute to 40 in the overworld configuration.
 - **variance**: Variance values are used to add randomness to the attributes of entities. For example, if an entity has a max health of 40 and a variance of 5, the entity's max health will be between 35 and 45.
 - **tier**: Tiers are used to apply the same modifications to multiple dimensions. For example, if you have multiple dimensions with the same mob attributes, you can create a tier with those attributes and apply it to all the dimensions.
 - **blacklist**: The mod will automatically blacklist entities that are causing performance issues because you are trying to apply an attribute to an entity that does not have that attribute. I don't recommend manually adding to the blacklist file located at `config/wowidbt/blacklist.json`, the mod will handle this for you.
-- **overrides**: Overrides are used to apply specific modifications to certain entities. For example, if you want to increase the max health of zombies in the overworld, you can create an override for zombies in the overworld.
-- **attributes**: Attributes are the base values for entities. For example, if you want all entities in the overworld to have a max health of 40, you can set the max health attribute to 40 in the overworld configuration.
 - **creative_flight**: Creative flight is granted by holding an item in your hand, off-hand, or having the defined item equipped. You can specify which items grant creative flight by adding their item IDs to the creative_flight list in the global settings.
 - **Flight_Disabled_dims**: Flight is disabled in dimensions specified in the Flight_Disabled_dims list in the global settings. This is achieved by varius checks and methods. Disclaimer: This is not a foolproof method and while it likely cannot be bypassed, it is very aggressive with what it considers "flight". That being said it is quite effective at preventing flight in the specified dimensions. 
 - **debug**: Debug mode can be enabled in the global settings. This will log additional information to the console to help with troubleshooting.
