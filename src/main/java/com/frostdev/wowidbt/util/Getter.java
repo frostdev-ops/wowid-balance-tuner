@@ -1,11 +1,15 @@
 package com.frostdev.wowidbt.util;
 
+import com.frostdev.wowidbt.event.MobEventRegister;
 import com.frostdev.wowidbt.wowidbt;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.WorldGenLevel;
@@ -13,41 +17,42 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Getter {
-    static JsonObject jsonObject;
-    static final String CONFIG_FILE_PATH = "config/wowid/wowidbt.json";
+     static JsonObject jsonObject;
+     static final String CONFIG_FILE_PATH = "config/wowid/wowidbt.json";
 
     public static String getDimName(LevelAccessor world) {
-        String dimensionName = world instanceof Level _lvl ? _lvl.dimension().toString() :
-                world instanceof WorldGenLevel _wgl ? _wgl.getLevel().dimension().toString() : Level.OVERWORLD.toString();
-        return dimensionName.substring(34, dimensionName.length() - 1);
+        return Optional.ofNullable(world)
+                .map(w -> w instanceof Level _lvl ? _lvl.dimension() : (w instanceof WorldGenLevel _wgl ? _wgl.getLevel().dimension() : Level.OVERWORLD))
+                .map(Object::toString)
+                .map(dimensionName -> dimensionName.substring(34, dimensionName.length() - 1))
+                .orElse("");
     }
 
     public static String getGenericEntityType(Entity entity) {
-        return entity == null ? "null" : getGeneric(entity);
+        return Optional.ofNullable(entity)
+                .map(Getter::getGeneric)
+                .orElse("null");
     }
 
     private static String getGeneric(Entity entity) {
-        return entity.getType().toString().replaceFirst("\\.", "").replaceFirst("entity", "").replaceFirst("\\.", ":");
+        return entity.getType().toString()
+                .replaceFirst("\\.", "")
+                .replaceFirst("entity", "")
+                .replaceFirst("\\.", ":");
     }
 
     public static Map<Direction.Axis, Double> getEntitySpeed(Entity entity) {
-        Map<Direction.Axis, Double> speed = new HashMap<>();
-        speed.put(Direction.Axis.X, entity.getDeltaMovement().x);
-        speed.put(Direction.Axis.Y, entity.getDeltaMovement().y);
-        speed.put(Direction.Axis.Z, entity.getDeltaMovement().z);
-        return speed;
-    }
-
-    static {
-        initializeJson();
+        return Map.of(
+                Direction.Axis.X, entity.getDeltaMovement().x,
+                Direction.Axis.Y, entity.getDeltaMovement().y,
+                Direction.Axis.Z, entity.getDeltaMovement().z
+        );
     }
 
     static void initializeJson() {
@@ -58,7 +63,7 @@ public class Getter {
         try (FileReader reader = new FileReader(CONFIG_FILE_PATH)) {
             jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
             if (getDebug()) {
-                wowidbt.log("Config file loaded!");
+                wowidbt.log("config file loaded!");
             }
         } catch (Exception e) {
             if (getDebug()) {
@@ -67,109 +72,188 @@ public class Getter {
         }
     }
 
-    public static void safeInit() {
-        Async.SafeInitAsync();
-    }
-
-    public static boolean getDebug() {
-        try {
-            return jsonObject.getAsJsonObject("global_settings").get("debug").getAsBoolean();
-        } catch (NullPointerException e) {
-            return false;
+    public static void safeInit(boolean async) {
+        if (async) {
+            Async.SafeInitAsync();
+            return;
+        }
+        if (jsonObject == null) {
+            if (getDebug()) {
+                wowidbt.log("config file not loaded...");
+            }
+            initializeJson();
+        } else {
+            reloadJsonIfModified();
         }
     }
 
+    private static void reloadJsonIfModified() {
+        File file = new File(CONFIG_FILE_PATH);
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+        } else {
+            try (FileReader reader = new FileReader(CONFIG_FILE_PATH)) {
+                JsonObject check = JsonParser.parseReader(reader).getAsJsonObject();
+                if (!check.equals(jsonObject)) {
+                    if (getDebug()) {
+                        wowidbt.log("Config file has been modified, reloading");
+                    }
+                    initializeJson();
+                }
+            } catch (IOException e) {
+                if (getDebug()) {
+                    wowidbt.log("Error reading JSON file");
+                }
+            }
+        }
+    }
+
+    public static boolean getDebug() {
+        return Optional.ofNullable(jsonObject)
+                .map(obj -> obj.getAsJsonObject("global_settings"))
+                .map(settings -> settings.get("debug"))
+                .map(JsonElement::getAsBoolean)
+                .orElse(false);
+    }
+
     public static List<String> getCreativeFlight() {
-        safeInit();
-        return jsonObject.getAsJsonObject("global_settings").getAsJsonArray("creative_flight").asList().stream().map(JsonElement::getAsString).collect(Collectors.toList());
+        return getListFromJson("global_settings", "creative_flight");
     }
 
     public static List<String> getFlyingDisabledDims() {
-        safeInit();
-        return jsonObject.getAsJsonObject("global_settings").getAsJsonArray("Flight_Disabled_dims").asList().stream().map(JsonElement::getAsString).collect(Collectors.toList());
+        return getListFromJson("global_settings", "Flight_Disabled_dims");
+    }
+
+    private static List<String> getListFromJson(String parentKey, String childKey) {
+        safeInit(true);
+        return Optional.ofNullable(jsonObject)
+                .map(obj -> obj.getAsJsonObject(parentKey))
+                .map(settings -> settings.getAsJsonArray(childKey))
+                .map(array -> array.asList().stream().map(JsonElement::getAsString).collect(Collectors.toList()))
+                .orElse(Collections.emptyList());
     }
 
     public static Map<String, Double> getDimVariance(String dimension) {
-        safeInit();
-        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).getAsJsonObject("variance").entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> entry.getValue().getAsDouble()
-        ));
+        return getMapFromJson("dimensions", dimension, "variance");
     }
 
     public static Double getGlobalVariance(String attribute) {
-        safeInit();
-        return jsonObject.getAsJsonObject("global_settings").getAsJsonObject("global_variance").get(attribute).getAsDouble();
+        return getDoubleFromJson("global_settings", "global_variance", attribute);
     }
 
     public static Map<String, Double> getTierVariance(int tier) {
-        safeInit();
-        return jsonObject.getAsJsonObject("tiers").getAsJsonObject(String.valueOf(tier)).getAsJsonObject("variance").entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> entry.getValue().getAsDouble()
-        ));
+        return getMapFromJson("tiers", String.valueOf(tier), "variance");
     }
 
     public static Map<String, Double> getOverrideVariance(String dimension, String mob) {
-        safeInit();
-        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).getAsJsonObject("overrides").getAsJsonObject(mob).getAsJsonObject("variance").entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> entry.getValue().getAsDouble()
-        ));
+        return getMapFromJson("dimensions", dimension, "overrides", mob, "variance");
     }
 
     public static Map<String, Double> getGlobalOverrideVariance(String mob) {
-        safeInit();
-        return jsonObject.getAsJsonObject("global_overrides").getAsJsonObject(mob).getAsJsonObject("variance").entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> entry.getValue().getAsDouble()
-        ));
+        return getMapFromJson("global_overrides", mob, "variance");
     }
 
     public static Map<String, Double> getTierOverrideVariance(int tier, String mob) {
-        safeInit();
-        return jsonObject.getAsJsonObject("tiers").getAsJsonObject(String.valueOf(tier)).getAsJsonObject("overrides").getAsJsonObject(mob).getAsJsonObject("variance").entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> entry.getValue().getAsDouble()
-        ));
+        return getMapFromJson("tiers", String.valueOf(tier), "overrides", mob, "variance");
+    }
+
+    private static Map<String, Double> getMapFromJson(String... keys) {
+        safeInit(true);
+        return Optional.ofNullable(jsonObject)
+                .map(obj -> {
+                    JsonObject current = obj;
+                    for (String key : keys) {
+                        current = current.getAsJsonObject(key);
+                        if (current == null) return null;
+                    }
+                    return current;
+                })
+                .map(jsonObj -> jsonObj.entrySet().stream().collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().getAsDouble()
+                )))
+                .orElse(Collections.emptyMap());
+    }
+
+    private static Double getDoubleFromJson(String parentKey, String childKey, String attribute) {
+        safeInit(true);
+        return Optional.ofNullable(jsonObject)
+                .map(obj -> obj.getAsJsonObject(parentKey))
+                .map(settings -> settings.getAsJsonObject(childKey))
+                .map(variance -> variance.get(attribute))
+                .map(JsonElement::getAsDouble)
+                .orElse(0.0);
     }
 
     public static @NotNull Boolean globalAttributeHasVariance(String attribute) {
-        safeInit();
-        return jsonObject.getAsJsonObject("global_settings").getAsJsonObject("global_variance").has(attribute);
+        return hasVariance("global_settings", "global_variance", attribute);
     }
 
     public static @NotNull Boolean attributeHasDimVariance(String dimension, String attribute) {
-        safeInit();
-        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).getAsJsonObject("variance").has(attribute);
+        return hasVariance("dimensions", dimension, "variance", attribute);
     }
 
     public static @NotNull Boolean tierAttributeHasVariance(int tier, String attribute) {
-        safeInit();
-        return jsonObject.getAsJsonObject("tiers").getAsJsonObject(String.valueOf(tier)).getAsJsonObject("variance").has(attribute);
+        return hasVariance("tiers", String.valueOf(tier), "variance", attribute);
     }
 
     public static @NotNull Boolean mobHasGlobalOverrideVariance(String mob, String attribute) {
-        safeInit();
-        JsonObject mobOverrides = jsonObject.getAsJsonObject("global_overrides").getAsJsonObject(mob);
-        return mobOverrides != null && mobOverrides.getAsJsonObject("variance").has(attribute);
+        return hasVariance("global_overrides", mob, "variance", attribute);
     }
 
     public static @NotNull Boolean overrideHasVariance(String dimension, String mob, String attribute) {
-        safeInit();
-        JsonObject mobOverrides = jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).getAsJsonObject("overrides").getAsJsonObject(mob);
-        return mobOverrides != null && mobOverrides.getAsJsonObject("variance").has(attribute);
+        return hasVariance("dimensions", dimension, "overrides", mob, "variance", attribute);
     }
 
     public static @NotNull Boolean tierOverrideHasVariance(int tier, String mob, String attribute) {
-        safeInit();
-        JsonObject mobOverrides = jsonObject.getAsJsonObject("tiers").getAsJsonObject(String.valueOf(tier)).getAsJsonObject("overrides").getAsJsonObject(mob);
-        return mobOverrides != null && mobOverrides.getAsJsonObject("variance").has(attribute);
+        return hasVariance("tiers", String.valueOf(tier), "overrides", mob, "variance", attribute);
+    }
+
+    private static @NotNull Boolean hasVariance(String... keys) {
+        safeInit(true);
+        if (getDebug()) {
+            wowidbt.log("hasVariance called with keys: " + Arrays.toString(keys));
+        }
+        return Optional.ofNullable(jsonObject)
+                .map(obj -> {
+                    JsonObject current = obj;
+                    for (String key : keys) {
+                        if (getDebug()) {
+                            wowidbt.log("Checking key: " + key);
+                        }
+                        if (!current.has(key)) {
+                            if (getDebug()) {
+                                wowidbt.log("Key not found: " + key);
+                            }
+                            return false;
+                    }
+                        if (current.has(key) && key.equals(keys[keys.length - 1])) {
+                            if (getDebug()) {
+                                wowidbt.log("variance definition found for: " + key);
+                            }
+                            return true;
+                        }
+                        JsonElement element = current.get(key);
+
+                        if (!element.isJsonObject()) {
+                            if (getDebug()) {
+                                wowidbt.log("Element is not a JsonObject: " + key);
+                            }
+                            return false;
+                        }
+                        current = element.getAsJsonObject();
+                    }
+                    return true;
+                })
+                .orElse(false);
     }
 
     public static Set<String> getDimensions() {
-        safeInit();
-        return jsonObject.getAsJsonObject("dimensions").keySet();
+        safeInit(true);
+        return Optional.ofNullable(jsonObject)
+                .map(obj -> obj.getAsJsonObject("dimensions"))
+                .map(JsonObject::keySet)
+                .orElse(Collections.emptySet());
     }
 
     public static boolean isJsonInitialized() {
@@ -177,104 +261,163 @@ public class Getter {
     }
 
     public static boolean areTiersDefined() {
-        safeInit();
-        return jsonObject.has("tiers");
+        return hasKey("tiers");
     }
 
-    public static boolean dimHasTiers(String dimension) {
-        safeInit();
+    public static boolean dimHasTier(String dimension) {
         return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).has("tier");
+    }
+    public static Map<Integer, Map<String, Double>> getTiers() {
+        safeInit(true);
+        return Optional.ofNullable(jsonObject)
+                .map(obj -> obj.getAsJsonObject("tiers"))
+                .orElseThrow().entrySet().stream().collect(Collectors.toMap(
+                        entry -> Integer.parseInt(entry.getKey()),
+                        entry -> entry.getValue().getAsJsonObject().entrySet().stream().collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().getAsDouble()
+                        ))
+                ));
+    }
+
+    private static boolean hasKey(String... keys) {
+        safeInit(true);
+        if (getDebug()) {
+            wowidbt.log("hasKey called with keys: " + Arrays.toString(keys));
+        }
+        return Optional.ofNullable(jsonObject)
+                .map(obj -> {
+                    JsonObject current = obj;
+                    for (String key : keys) {
+                        if (getDebug()) {
+                            wowidbt.log("Checking key: " + key);
+                        }
+                        JsonElement element = current.get(key);
+                        if (!(element instanceof JsonObject)) {
+                            if (getDebug()) {
+                                wowidbt.log("Key not found or not a JsonObject: " + key);
+                            }
+                            return false;
+                        }
+                        current = element.getAsJsonObject();
+                    }
+                    return true;
+                })
+                .orElse(false);
     }
 
     public static @NotNull Map<String, Double> getTierAttributes(int tier) {
-        safeInit();
-        return jsonObject.getAsJsonObject("tiers").getAsJsonObject(String.valueOf(tier)).getAsJsonObject("attributes").entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> entry.getValue().getAsDouble()
-        ));
+        return getMapFromJson("tiers", String.valueOf(tier), "attributes");
     }
 
     public static @NotNull Map<Integer, Map<String, Double>> getTierOverrides() {
-        safeInit();
-        return jsonObject.getAsJsonObject("tiers").entrySet().stream().collect(Collectors.toMap(
-                entry -> Integer.parseInt(entry.getKey()),
-                entry -> entry.getValue().getAsJsonObject().entrySet().stream().collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        e -> e.getValue().getAsDouble()
-                ))
-        ));
+        safeInit(true);
+        return Optional.ofNullable(jsonObject)
+                .map(obj -> obj.getAsJsonObject("tiers"))
+                .map(tiers -> tiers.entrySet().stream().collect(Collectors.toMap(
+                        entry -> Integer.parseInt(entry.getKey()),
+                        entry -> entry.getValue().getAsJsonObject().entrySet().stream().collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().getAsDouble()
+                        ))
+                )))
+                .orElse(Collections.emptyMap());
     }
 
     public static Map<String, Double> getGlobalOverrideAttributes(String mob) {
-        safeInit();
-        return jsonObject.getAsJsonObject("global_overrides").getAsJsonObject(mob).getAsJsonObject("attributes").entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> entry.getValue().getAsDouble()
-        ));
+        return getMapFromJson("global_overrides", mob, "attributes");
     }
 
     public static Boolean mobHasGlobalOverrides(String mob) {
-        safeInit();
-        return jsonObject.getAsJsonObject("global_overrides").has(mob);
+        return hasKey("global_overrides", mob);
     }
 
     public static Boolean hasTierOverrides(int tier) {
-        safeInit();
-        return jsonObject.getAsJsonObject("tiers").getAsJsonObject(String.valueOf(tier)).has("overrides");
+        return hasKey("tiers", String.valueOf(tier), "overrides");
     }
 
     public static Boolean hasTierAttributes(int tier) {
-        safeInit();
-        return jsonObject.getAsJsonObject("tiers").getAsJsonObject(String.valueOf(tier)).has("attributes");
+        return hasKey("tiers", String.valueOf(tier), "attributes");
     }
 
     public static boolean hasGlobalOverrides() {
-        safeInit();
-        return jsonObject.has("global_overrides");
+        return hasKey("global_overrides");
     }
 
     public static Map<String, Double> getTierAttributes(String dimension) {
-        safeInit();
         return getTierAttributes(getTier(dimension));
     }
 
     public static boolean hasAttributes(String dimension) {
-        safeInit();
-        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).has("attributes");
+        return hasKey("dimensions", dimension, "attributes");
     }
 
     public static Map<String, Float> getAttributes(String dimension) {
-        safeInit();
-        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).getAsJsonObject("attributes").entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> entry.getValue().getAsFloat()
-        ));
+        return getMapFromJson("dimensions", dimension, "attributes").entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().floatValue()));
     }
 
     public static Map<String, Float> getOverrides(String dimension, String mob) {
-        safeInit();
-        if (doesMobHaveOverrides(dimension, mob)) {
-            return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).getAsJsonObject("overrides").getAsJsonObject(mob).getAsJsonObject("attributes").entrySet().stream().collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    entry -> entry.getValue().getAsFloat()
-            ));
-        }
-        throw new IllegalArgumentException("Mob does not have overrides");
+        return getMapFromJson("dimensions", dimension, "overrides", mob, "attributes").entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().floatValue()));
     }
 
     public static Integer getTier(String dimension) {
-        safeInit();
-        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).getAsJsonObject("tier").getAsInt();
+        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).get("tier").getAsInt();
     }
 
     public static boolean hasOverrides(String dimension) {
-        safeInit();
-        return jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).has("overrides");
+        return hasKey("dimensions", dimension, "overrides");
     }
 
     public static boolean doesMobHaveOverrides(String dimension, String mob) {
-        safeInit();
-        JsonObject overridesObject = jsonObject.getAsJsonObject("dimensions").getAsJsonObject(dimension).getAsJsonObject("overrides");
-        return overridesObject != null && overridesObject.has(mob);
+        return hasKey("dimensions", dimension, "overrides", mob);
     }
+
+    public static boolean isBlackListDefined() {
+        File file = new File("config/wowid/entity_blacklist.json");
+        return file.exists();
+    }
+
+    public static void loadBlackList() {
+        File file = new File("config/wowid/entity_blacklist.json");
+        if (MobEventRegister.attributeBlacklist == null) {
+            MobEventRegister.attributeBlacklist = new HashMap<>();
+        }
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+                JsonArray jsonArray = entry.getValue().getAsJsonArray();
+                List<String> list = new ArrayList<>();
+                for (JsonElement element : jsonArray) {
+                    list.add(element.getAsString());
+                }
+                MobEventRegister.attributeBlacklist.put(BuiltInRegistries.ENTITY_TYPE.byId(Integer.parseInt(entry.getKey())), list);
+            }
+        } catch (IOException e) {
+            wowidbt.log("Error reading blacklist from entity_blacklist.json: " + e.getMessage());
+        }
+    }
+    public static void writeBlackListToFile(Map<EntityType<?>, List<String>> blackList) {
+        File file = new File("config/wowid/entity_blacklist.json");
+        JsonObject json = new JsonObject();
+
+        for (Map.Entry<EntityType<?>, List<String>> entry : blackList.entrySet()) {
+            json.add(String.valueOf(Integer.parseInt(String.valueOf(BuiltInRegistries.ENTITY_TYPE.getId(entry.getKey())))), entry.getValue().stream()
+                    .collect(JsonArray::new, JsonArray::add, JsonArray::addAll));
+        }
+
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(json.toString());
+            if (getDebug()) {
+                wowidbt.log("Blacklist written to entity_blacklist.json");
+            }
+        } catch (IOException e) {
+            if (getDebug()) {
+                wowidbt.log("Error writing blacklist to entity_blacklist.json: " + e.getMessage());
+            }
+        }
+    }
+
+
 }

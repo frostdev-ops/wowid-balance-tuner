@@ -23,8 +23,8 @@ public final class ConfigBootstrap {
     public static void init() throws IOException, SyntaxError {
         ConfigHolder.add("items",    ItemsConfig.CODEC,    ItemsConfig.DEFAULT,    ItemsConfig::process);
         ConfigHolder.add("entities", EntitiesConfig.CODEC, EntitiesConfig.DEFAULT, EntitiesConfig::process);
-        ConfigHolder.add("core",     CoreModifierConfig.CODEC,     CoreModifierConfig.DEFAULT,     CoreModifierConfig::process);
-        Path directory = Path.of("config", "wowid");
+        ConfigHolder.add("core",    CoreModifierConfig.CODEC, CoreModifierConfig.DEFAULT, CoreModifierConfig::process);
+        Path directory = Path.of("config","wowid");
         if (!Files.exists(directory)) {
             Files.createDirectory(directory);
         }
