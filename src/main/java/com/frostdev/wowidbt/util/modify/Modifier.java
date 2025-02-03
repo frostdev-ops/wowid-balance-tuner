@@ -2,6 +2,7 @@ package com.frostdev.wowidbt.util.modify;
 
 
 import blue.endless.jankson.Jankson;
+import com.frostdev.wowidbt.util.config.CoreModifierConfig;
 import com.frostdev.wowidbt.wowidbt;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.world.item.Item;

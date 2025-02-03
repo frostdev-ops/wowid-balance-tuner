@@ -22,23 +22,23 @@ public record EntitiesConfig(
             ConfigHelper.codecStringMap(ConfigHelper.codecStringMap(Codec.FLOAT)).fieldOf("attribute_base_values").forGetter(EntitiesConfig::attributeBaseValues)
     ).apply(inst, EntitiesConfig::new)), Map.of(
             "attribute_base_values", """
-                    Specify an entity to set the given attribute values for. Regex may be used for the attribute names as well. For example:
+            Specify entities to set their attribute values. You can use regex patterns for attribute names. For example:
                     "minecraft:.*": {"minecraft:generic.max_health": 40}
-                    This example will set the max health of all vanilla living entities to 40.
-                    When modifying this map, the game must be restarted for the changes to take effect."""
+            This will set the max health of all vanilla living entities to 40.
+            Changes to this map require a game restart to take effect."""
     ));
     public static final EntitiesConfig DEFAULT = new EntitiesConfig(Map.of());
-    
-    @SuppressWarnings({"unused", "unchecked"})
+
+    @SuppressWarnings({"unchecked"})
     public void process() {
-        ConfigHelper.processConfigMap(attributeBaseValues(), BuiltInRegistries.ENTITY_TYPE, (k, v) -> {
+        ConfigHelper.processConfigMap(attributeBaseValues(), BuiltInRegistries.ENTITY_TYPE, (entityType, attributes) -> {
             try {
-                EntityType<? extends LivingEntity> entity = (EntityType<? extends LivingEntity>) k;
-                Map<Attribute, Float> map = new HashMap<>();
-                ConfigHelper.processConfigMap(v, BuiltInRegistries.ATTRIBUTE, map::put, key -> "Key " + key + " for attribute_base_values in entities.json5 did not match any attributes");
-                ConfigResults.ATTRIBUTE_BASE_VALUES.put(entity, map);
+                EntityType<? extends LivingEntity> entity = (EntityType<? extends LivingEntity>) entityType;
+                Map<Attribute, Float> attributeMap = new HashMap<>();
+                ConfigHelper.processConfigMap(attributes, BuiltInRegistries.ATTRIBUTE, attributeMap::put, key -> "Key " + key + " for attribute_base_values in entities.json5 did not match any attributes");
+                ConfigResults.ATTRIBUTE_BASE_VALUES.put(entity, attributeMap);
             } catch (ClassCastException e) {
-                wowidbt.log("Entity {} is not a living entity, but was a match for a regex in attribute_base_values in entities.json5 "+BuiltInRegistries.ENTITY_TYPE.getId(k));
+                wowidbt.log("Entity " + BuiltInRegistries.ENTITY_TYPE.getId(entityType) + " is not a living entity, but was a match for a regex in attribute_base_values in entities.json5");
             }
         }, key -> "Key " + key + " for attribute_base_values in entities.json5 did not match any entities");
     }

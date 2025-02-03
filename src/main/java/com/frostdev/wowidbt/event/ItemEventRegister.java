@@ -1,5 +1,7 @@
+
 package com.frostdev.wowidbt.event;
 
+import com.frostdev.wowidbt.event.DimEventRegister;
 import com.frostdev.wowidbt.util.Async;
 import com.frostdev.wowidbt.util.Getter;
 import net.minecraft.world.entity.player.Player;
@@ -15,7 +17,6 @@ import java.util.concurrent.Future;
 
 import static net.neoforged.neoforge.common.NeoForgeMod.CREATIVE_FLIGHT;
 
-
 @EventBusSubscriber(modid = "wowidbt")
 public class ItemEventRegister {
     private static final Map<Player, Future<?>> creativeFlightPlayers = new HashMap<>();
@@ -23,53 +24,51 @@ public class ItemEventRegister {
     @SubscribeEvent
     public static void onItemRegister(LivingEquipmentChangeEvent event) {
         if (event.getEntity() instanceof Player player) {
-            if (Getter.getCreativeFlight().contains(event.getTo().getItem().toString())){
-                handleItemFlightLogic(player, true);
-            }else if (Getter.getCreativeFlight().contains(event.getFrom().getItem().toString())){
-                handleItemFlightLogic(player, false);
+            boolean hasCreativeFlightItem = Getter.getCreativeFlight().contains(event.getTo().getItem().toString());
+            boolean hadCreativeFlightItem = Getter.getCreativeFlight().contains(event.getFrom().getItem().toString());
+
+            if (hasCreativeFlightItem || hadCreativeFlightItem) {
+                handleItemFlightLogic(player, hasCreativeFlightItem);
             }
         }
     }
 
-
     private static void handleItemFlightLogic(Player player, boolean flyEnabled) {
-        if (!flyEnabled) {
-            if (creativeFlightPlayers.containsKey(player)) {
-                flyEnabled = player.getInventory().armor.stream()
-                        .map(ItemStack::getItem)
-                        .map(Object::toString)
-                        .anyMatch(Getter.getCreativeFlight()::contains);
-                if (!flyEnabled) {
-                    creativeFlightPlayers.get(player).cancel(true);
-                    creativeFlightPlayers.remove(player);
-                }
-            }
-        }
-        // If player is in no-fly zone,cancel the task
-         if (DimEventRegister.noFlyZoneTasks.containsKey(player)) {
-             Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(0.0);
-             player.onUpdateAbilities();
-            if (creativeFlightPlayers.containsKey(player)) {
+        if (!flyEnabled && creativeFlightPlayers.containsKey(player)) {
+            flyEnabled = player.getInventory().armor.stream()
+                    .map(ItemStack::getItem)
+                    .map(Object::toString)
+                    .anyMatch(Getter.getCreativeFlight()::contains);
+
+            if (!flyEnabled) {
                 creativeFlightPlayers.get(player).cancel(true);
                 creativeFlightPlayers.remove(player);
             }
-            
-        } else {
-            for (ItemStack item : player.getInventory().armor.stream().toList()) {
-                // If player has creative flight item, set to fly
-                if (Getter.getCreativeFlight().contains(item.getItem().toString())) {
-                    creativeFlightPlayers.put(player, Async.setToFly(player));
-                    flyEnabled = true;
-                    break;
-                }
-            }
-            if (flyEnabled){
-                Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(1.0);
-            }else {
-                Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(0.0);
-            }
-             player.onUpdateAbilities();
         }
-        
+
+        if (DimEventRegister.noFlyZoneTasks.containsKey(player)) {
+            disableFlight(player);
+        } else {
+            if (flyEnabled) {
+                enableFlight(player);
+            } else {
+                disableFlight(player);
+            }
+        }
+    }
+
+    private static void enableFlight(Player player) {
+        creativeFlightPlayers.put(player, Async.setToFly(player));
+        Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(1.0);
+        player.onUpdateAbilities();
+    }
+
+    private static void disableFlight(Player player) {
+        Objects.requireNonNull(player.getAttributes().getInstance(CREATIVE_FLIGHT)).setBaseValue(0.0);
+        player.onUpdateAbilities();
+        if (creativeFlightPlayers.containsKey(player)) {
+            creativeFlightPlayers.get(player).cancel(true);
+            creativeFlightPlayers.remove(player);
+        }
     }
 }

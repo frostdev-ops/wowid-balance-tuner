@@ -16,8 +16,8 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-
 public final class ConfigHelper {
+
     public static <T> JsonElement encodeJson(Codec<T> codec, T input) {
         return codec.encodeStart(JanksonOps.COMMENTED, input).getOrThrow();
     }
@@ -43,17 +43,13 @@ public final class ConfigHelper {
     }
 
     public static <R, T> void processConfigMap(Map<String, T> configValue, Function<String, List<R>> registryGetter, BiConsumer<R, T> consumer, @Nullable Function<String, String> emptyListMessage) {
-        for (Map.Entry<String, T> entry : configValue.entrySet()) {
-            String key = entry.getKey();
-            T value = entry.getValue();
+        configValue.forEach((key, value) -> {
             List<R> list = registryGetter.apply(key);
             if (list.isEmpty() && emptyListMessage != null) {
                 wowidbt.log(emptyListMessage.apply(key));
             }
-            for (R r : list) {
-                consumer.accept(r, value);
-            }
-        }
+            list.forEach(r -> consumer.accept(r, value));
+        });
     }
 
     public static <T> List<T> resolveRegex(String regex, Registry<T> registry) {

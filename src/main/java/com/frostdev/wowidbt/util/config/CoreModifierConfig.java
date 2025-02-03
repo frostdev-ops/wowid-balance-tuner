@@ -3,7 +3,6 @@ package com.frostdev.wowidbt.util.config;
 import com.frostdev.wowidbt.util.modify.ConfigHelper;
 import com.frostdev.wowidbt.util.modify.ConfigResults;
 import com.frostdev.wowidbt.wowidbt;
-import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -23,17 +22,13 @@ import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Map;
-import java.util.function.Function;
 
 public record CoreModifierConfig(boolean logBlocks, boolean logItems, boolean logEntities) {
     public static final MapCodec<CoreModifierConfig> CODEC = CommentMapCodec.of(RecordCodecBuilder.mapCodec(inst -> inst.group(
-            Codec.BOOL.fieldOf("log_blocks")  .forGetter(CoreModifierConfig::logBlocks),
-            Codec.BOOL.fieldOf("log_items")   .forGetter(CoreModifierConfig::logItems),
+            Codec.BOOL.fieldOf("log_blocks").forGetter(CoreModifierConfig::logBlocks),
+            Codec.BOOL.fieldOf("log_items").forGetter(CoreModifierConfig::logItems),
             Codec.BOOL.fieldOf("log_entities").forGetter(CoreModifierConfig::logEntities)
     ).apply(inst, CoreModifierConfig::new)), Map.of(
             "log_blocks", """
@@ -77,68 +72,84 @@ public record CoreModifierConfig(boolean logBlocks, boolean logItems, boolean lo
         ConfigResults.CORE_CONFIG = this;
     }
 
-    @SuppressWarnings({"DataFlowIssue", "unchecked", "ConstantValue"})
     public void run() {
         if (logItems) {
-            wowidbt.LOGGER.info("Item Properties:");
-            for (Item item : BuiltInRegistries.ITEM) {
-                StringBuilder sb = new StringBuilder(BuiltInRegistries.ITEM.getKey(item).toString());
-                sb.append(": ");
-                ItemStack stack = new ItemStack(item);
-                if (stack.has(DataComponents.MAX_STACK_SIZE) && stack.get(DataComponents.MAX_STACK_SIZE) == 64) {
-                    stack.remove(DataComponents.MAX_STACK_SIZE);
-                }
-                if (stack.has(DataComponents.LORE) && stack.get(DataComponents.LORE) == ItemLore.EMPTY) {
-                    stack.remove(DataComponents.LORE);
-                }
-                if (stack.has(DataComponents.ENCHANTMENTS) && stack.get(DataComponents.ENCHANTMENTS) == ItemEnchantments.EMPTY) {
-                    stack.remove(DataComponents.ENCHANTMENTS);
-                }
-                if (stack.has(DataComponents.REPAIR_COST) && stack.get(DataComponents.REPAIR_COST) == 0) {
-                    stack.remove(DataComponents.REPAIR_COST);
-                }
-                if (stack.has(DataComponents.ATTRIBUTE_MODIFIERS) && stack.get(DataComponents.ATTRIBUTE_MODIFIERS) == ItemAttributeModifiers.EMPTY) {
-                    stack.remove(DataComponents.ATTRIBUTE_MODIFIERS);
-                }
-                if (stack.has(DataComponents.RARITY) && stack.get(DataComponents.RARITY) == Rarity.COMMON) {
-                    stack.remove(DataComponents.RARITY);
-                }
-                if (!stack.getComponents().isEmpty()) {
-                        String json = ConfigHelper.encodeJson(DataComponentMap.CODEC, stack.getComponents()).toJson();
-                        sb.append("Default Components: ");
-                        sb.append(json);
-                        sb.append(", ");
-                }
-                if (stack.getCraftingRemainingItem() != ItemStack.EMPTY) {
-                    sb.append("Crafting Remaining Item: ");
-                    sb.append(stack.getCraftingRemainingItem().getItemHolder().getKey().location());
-                    sb.append(", ");
-                }
-                wowidbt.LOGGER.info(sb.substring(0, sb.length() - 2));
-            }
+            logItemProperties();
         }
         if (logEntities) {
-            wowidbt.LOGGER.info("Entity Properties:");
-            for (EntityType<?> entity : BuiltInRegistries.ENTITY_TYPE) {
-                try {
-                    EntityType<? extends LivingEntity> livingEntity = (EntityType<? extends LivingEntity>) entity;
-                    AttributeSupplier attributeSupplier = DefaultAttributes.getSupplier(livingEntity);
-                    if (attributeSupplier == null) continue;
-                    StringBuilder sb = new StringBuilder(BuiltInRegistries.ENTITY_TYPE.getKey(entity).toString());
-                    sb.append(": ");
-                    for (Attribute attribute : BuiltInRegistries.ATTRIBUTE) {
-                        Holder<Attribute> holder = BuiltInRegistries.ATTRIBUTE.wrapAsHolder(attribute);
-                        if (!attributeSupplier.hasAttribute(holder)) continue;
-                        double value = attributeSupplier.getValue(holder);
-                        if (value == attribute.getDefaultValue()) continue;
-                        sb.append(BuiltInRegistries.ATTRIBUTE.getKey(attribute).toString());
-                        sb.append(": ");
-                        sb.append(value);
-                        sb.append(", ");
-                    }
-                    wowidbt.LOGGER.info(sb.substring(0, sb.length() - 2));
-                } catch (ClassCastException ignored) {
+            logEntityProperties();
+        }
+    }
+
+    private void logItemProperties() {
+        wowidbt.LOGGER.info("Item Properties:");
+        for (Item item : BuiltInRegistries.ITEM) {
+            StringBuilder sb = new StringBuilder(BuiltInRegistries.ITEM.getKey(item).toString());
+            sb.append(": ");
+            ItemStack stack = new ItemStack(item);
+            removeDefaultComponents(stack);
+            if (!stack.getComponents().isEmpty()) {
+                String json = ConfigHelper.encodeJson(DataComponentMap.CODEC, stack.getComponents()).toJson();
+                sb.append("Default Components: ").append(json).append(", ");
+            }
+            if (!stack.getCraftingRemainingItem().isEmpty()) {
+                sb.append("Crafting Remaining Item: ").append(stack.getCraftingRemainingItem().getItemHolder().getKey().location()).append(", ");
+            }
+            wowidbt.LOGGER.info(sb.substring(0, sb.length() - 2));
+        }
+    }
+
+    private void removeDefaultComponents(ItemStack stack) {
+        if (stack.has(DataComponents.MAX_STACK_SIZE) &&
+                stack.get(DataComponents.MAX_STACK_SIZE) != null &&
+                stack.get(DataComponents.MAX_STACK_SIZE) == 64) {
+            stack.remove(DataComponents.MAX_STACK_SIZE);
+        }
+        if (stack.has(DataComponents.LORE) &&
+                stack.get(DataComponents.LORE) != null &&
+                stack.get(DataComponents.LORE) == ItemLore.EMPTY) {
+            stack.remove(DataComponents.LORE);
+        }
+        if (stack.has(DataComponents.ENCHANTMENTS) &&
+                stack.get(DataComponents.ENCHANTMENTS) != null &&
+                stack.get(DataComponents.ENCHANTMENTS) == ItemEnchantments.EMPTY) {
+            stack.remove(DataComponents.ENCHANTMENTS);
+        }
+        if (stack.has(DataComponents.REPAIR_COST) &&
+                stack.get(DataComponents.REPAIR_COST) != null &&
+                stack.get(DataComponents.REPAIR_COST) == 0) {
+            stack.remove(DataComponents.REPAIR_COST);
+        }
+        if (stack.has(DataComponents.ATTRIBUTE_MODIFIERS) &&
+                stack.get(DataComponents.ATTRIBUTE_MODIFIERS) != null &&
+                stack.get(DataComponents.ATTRIBUTE_MODIFIERS) == ItemAttributeModifiers.EMPTY) {
+            stack.remove(DataComponents.ATTRIBUTE_MODIFIERS);
+        }
+        if (stack.has(DataComponents.RARITY) &&
+                stack.get(DataComponents.RARITY) != null &&
+                stack.get(DataComponents.RARITY) == Rarity.COMMON) {
+            stack.remove(DataComponents.RARITY);
+        }
+    }
+
+    private void logEntityProperties() {
+        wowidbt.LOGGER.info("Entity Properties:");
+        for (EntityType<?> entity : BuiltInRegistries.ENTITY_TYPE) {
+            try {
+                EntityType<? extends LivingEntity> livingEntity = (EntityType<? extends LivingEntity>) entity;
+                AttributeSupplier attributeSupplier = DefaultAttributes.getSupplier(livingEntity);
+                StringBuilder sb = new StringBuilder(BuiltInRegistries.ENTITY_TYPE.getKey(entity).toString());
+                sb.append(": ");
+                for (Attribute attribute : BuiltInRegistries.ATTRIBUTE) {
+                    Holder<Attribute> holder = BuiltInRegistries.ATTRIBUTE.wrapAsHolder(attribute);
+                    if (!attributeSupplier.hasAttribute(holder)) continue;
+                    double value = attributeSupplier.getValue(holder);
+                    if (value == attribute.getDefaultValue()) continue;
+                    sb.append(BuiltInRegistries.ATTRIBUTE.getKey(attribute).toString()).append(": ").append(value).append(", ");
                 }
+                wowidbt.LOGGER.info(sb.substring(0, sb.length() - 2));
+            } catch (ClassCastException e) {
+                wowidbt.LOGGER.warn("Entity " + BuiltInRegistries.ENTITY_TYPE.getKey(entity) + " is not a living entity.");
             }
         }
     }

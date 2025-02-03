@@ -35,7 +35,7 @@ public class wowidbt
         bus.addListener(EventPriority.LOWEST, EntityAttributeModificationEvent.class, Modifier::entityAttributeModification);
         bus.addListener(EventPriority.LOWEST, ModifyDefaultComponentsEvent.class,     Modifier::modifyDefaultComponents);
         bus.addListener(EventPriority.LOWEST, FMLLoadCompleteEvent.class,             Modifier::loadComplete);
-        Getter.safeInit(true);
+        Getter.safeInit();
         log("Getter initialized: " + Getter.isJsonInitialized());
         NeoForge.EVENT_BUS.register(this);
     }
