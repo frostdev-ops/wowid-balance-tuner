@@ -2,7 +2,7 @@ package com.frostdev.wowidbt.event;
 
 import com.frostdev.wowidbt.MobEdit;
 import com.frostdev.wowidbt.util.Async;
-import com.frostdev.wowidbt.util.Getter;
+import com.frostdev.wowidbt.util.config.Getter;
 import com.frostdev.wowidbt.wowidbt;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.frostdev.wowidbt.util.Getter.getDimName;
+import static com.frostdev.wowidbt.util.config.Getter.getDimName;
 
 @EventBusSubscriber(modid = "wowidbt")
 public class MobEventRegister {

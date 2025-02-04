@@ -1,8 +1,7 @@
-package com.frostdev.wowidbt.util.modify;
+package com.frostdev.wowidbt.util.config;
 
 
 import blue.endless.jankson.Jankson;
-import com.frostdev.wowidbt.util.config.CoreModifierConfig;
 import com.frostdev.wowidbt.wowidbt;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.world.item.Item;
@@ -41,6 +40,6 @@ public final class Modifier {
     }
 
     public static void loadComplete(FMLLoadCompleteEvent event) {
-        ConfigResults.CORE_CONFIG.run();
+        ConfigResults.RECORD.run();
     }
 }

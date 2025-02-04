@@ -2,18 +2,12 @@
 package com.frostdev.wowidbt.event;
 
 import com.frostdev.wowidbt.util.Async;
-import com.frostdev.wowidbt.util.Getter;
-import net.minecraft.core.registries.BuiltInRegistries;
+import com.frostdev.wowidbt.util.config.Getter;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
-import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.util.HashMap;
 import java.util.Map;

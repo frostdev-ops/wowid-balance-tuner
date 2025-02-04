@@ -1,15 +1,13 @@
 package com.frostdev.wowidbt;
 
 import com.frostdev.wowidbt.event.MobEventRegister;
-import com.frostdev.wowidbt.util.Getter;
+import com.frostdev.wowidbt.util.config.Getter;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.neoforged.neoforge.common.Tags;
 
 import java.util.ArrayList;
 import java.util.List;

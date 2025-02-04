@@ -1,15 +1,33 @@
-package com.frostdev.wowidbt.util;
+package com.frostdev.wowidbt.util.config;
 
 import com.frostdev.wowidbt.event.MobEventRegister;
+import com.frostdev.wowidbt.util.Async;
 import com.frostdev.wowidbt.wowidbt;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.lukebemish.codecextras.comments.CommentMapCodec;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.DefaultAttributes;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.WorldGenLevel;
@@ -23,8 +41,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Getter {
-     static JsonObject jsonObject;
-     static final String CONFIG_FILE_PATH = "config/wowid/wowidbt.json";
+     public static JsonObject jsonObject;
+     public static final String CONFIG_FILE_PATH = "config/wowid/wowidbt.json";
 
     public static String getDimName(LevelAccessor world) {
         return Optional.ofNullable(world)
@@ -55,7 +73,7 @@ public class Getter {
         );
     }
 
-    static void initializeJson() {
+    public static void initializeJson() {
         File file = new File(CONFIG_FILE_PATH);
         if (!file.exists()) {
             file.getParentFile().mkdirs();
@@ -422,5 +440,163 @@ public class Getter {
         }
     }
 
+    public static void logItemProperties() {
+        wowidbt.LOGGER.info("Item Properties:");
+        for (Item item : BuiltInRegistries.ITEM) {
+            StringBuilder sb = new StringBuilder(BuiltInRegistries.ITEM.getKey(item).toString());
+            sb.append(": ");
+            ItemStack stack = new ItemStack(item);
+            removeDefaultComponents(stack);
+            if (!stack.getComponents().isEmpty()) {
+                String json = ConfigHelper.encodeJson(DataComponentMap.CODEC, stack.getComponents()).toJson();
+                sb.append("Default Components: ").append(json).append(", ");
+            }
+            if (!stack.getCraftingRemainingItem().isEmpty()) {
+                sb.append("Crafting Remaining Item: ").append(stack.getCraftingRemainingItem().getItemHolder().getKey().location()).append(", ");
+            }
+            wowidbt.LOGGER.info(sb.substring(0, sb.length() - 2));
+        }
+    }
 
+    private static void removeDefaultComponents(ItemStack stack) {
+        if (stack.has(DataComponents.MAX_STACK_SIZE) &&
+                stack.get(DataComponents.MAX_STACK_SIZE) != null &&
+                stack.get(DataComponents.MAX_STACK_SIZE) == 64) {
+            stack.remove(DataComponents.MAX_STACK_SIZE);
+        }
+        if (stack.has(DataComponents.LORE) &&
+                stack.get(DataComponents.LORE) != null &&
+                stack.get(DataComponents.LORE) == ItemLore.EMPTY) {
+            stack.remove(DataComponents.LORE);
+        }
+        if (stack.has(DataComponents.ENCHANTMENTS) &&
+                stack.get(DataComponents.ENCHANTMENTS) != null &&
+                stack.get(DataComponents.ENCHANTMENTS) == ItemEnchantments.EMPTY) {
+            stack.remove(DataComponents.ENCHANTMENTS);
+        }
+        if (stack.has(DataComponents.REPAIR_COST) &&
+                stack.get(DataComponents.REPAIR_COST) != null &&
+                stack.get(DataComponents.REPAIR_COST) == 0) {
+            stack.remove(DataComponents.REPAIR_COST);
+        }
+        if (stack.has(DataComponents.ATTRIBUTE_MODIFIERS) &&
+                stack.get(DataComponents.ATTRIBUTE_MODIFIERS) != null &&
+                stack.get(DataComponents.ATTRIBUTE_MODIFIERS) == ItemAttributeModifiers.EMPTY) {
+            stack.remove(DataComponents.ATTRIBUTE_MODIFIERS);
+        }
+        if (stack.has(DataComponents.RARITY) &&
+                stack.get(DataComponents.RARITY) != null &&
+                stack.get(DataComponents.RARITY) == Rarity.COMMON) {
+            stack.remove(DataComponents.RARITY);
+        }
+    }
+
+    public static void logEntityProperties() {
+        wowidbt.LOGGER.info("Entity Properties:");
+        for (EntityType<?> entity : BuiltInRegistries.ENTITY_TYPE) {
+            try {
+                EntityType<? extends LivingEntity> livingEntity = (EntityType<? extends LivingEntity>) entity;
+                AttributeSupplier attributeSupplier = DefaultAttributes.getSupplier(livingEntity);
+                StringBuilder sb = new StringBuilder(BuiltInRegistries.ENTITY_TYPE.getKey(entity).toString());
+                sb.append(": ");
+                for (Attribute attribute : BuiltInRegistries.ATTRIBUTE) {
+                    Holder<Attribute> holder = BuiltInRegistries.ATTRIBUTE.wrapAsHolder(attribute);
+                    if (!attributeSupplier.hasAttribute(holder)) continue;
+                    double value = attributeSupplier.getValue(holder);
+                    if (value == attribute.getDefaultValue()) continue;
+                    sb.append(Objects.requireNonNull(BuiltInRegistries.ATTRIBUTE.getKey(attribute)).toString()).append(": ").append(value).append(", ");
+                }
+                wowidbt.LOGGER.info(sb.substring(0, sb.length() - 2));
+            } catch (ClassCastException e) {
+                wowidbt.LOGGER.warn("Entity " + BuiltInRegistries.ENTITY_TYPE.getKey(entity) + " is not a living entity.");
+            }
+        }
+    }
+
+
+}
+record GetRecord(boolean logItems) {
+    public static final MapCodec<GetRecord> CODEC = CommentMapCodec.of(RecordCodecBuilder.mapCodec(inst -> inst.group(
+            Codec.BOOL.fieldOf("log_items").forGetter(GetRecord::logItems)
+    ).apply(inst, GetRecord::new)), Map.of(
+            "log_items", """
+            Indicates whether to log all items' properties. Only non-default data components will be logged.
+            Default data components are: {
+                        "minecraft:max_stack_size": 64,
+                        "minecraft:lore": [],
+                        "minecraft:enchantments": {
+                            "levels": {},
+                            "show_in_tooltip": true
+                        },
+                        "minecraft:repair_cost": 0,
+                        "minecraft:attribute_modifiers": {
+                            "modifiers": [],
+                            "show_in_tooltip": true
+                        },
+                        "minecraft:rarity": "common"
+                    }
+                   \s"""
+    ));
+    public static final GetRecord DEFAULT = new GetRecord(false);
+
+    public void process() {
+        ConfigResults.RECORD = this;
+    }
+
+    public void run() {
+        if (logItems) {
+            logItemProperties();
+        }
+    }
+
+    private void logItemProperties() {
+        wowidbt.LOGGER.info("Item Properties:");
+        for (Item item : BuiltInRegistries.ITEM) {
+            StringBuilder sb = new StringBuilder(BuiltInRegistries.ITEM.getKey(item).toString());
+            sb.append(": ");
+            ItemStack stack = new ItemStack(item);
+            removeDefaultComponents(stack);
+            if (!stack.getComponents().isEmpty()) {
+                String json = ConfigHelper.encodeJson(DataComponentMap.CODEC, stack.getComponents()).toJson();
+                sb.append("Default Components: ").append(json).append(", ");
+            }
+            if (!stack.getCraftingRemainingItem().isEmpty()) {
+                sb.append("Crafting Remaining Item: ").append(stack.getCraftingRemainingItem().getItemHolder().getKey().location()).append(", ");
+            }
+            wowidbt.LOGGER.info(sb.substring(0, sb.length() - 2));
+        }
+    }
+
+    private void removeDefaultComponents(ItemStack stack) {
+        if (stack.has(DataComponents.MAX_STACK_SIZE) &&
+                stack.get(DataComponents.MAX_STACK_SIZE) != null &&
+                stack.get(DataComponents.MAX_STACK_SIZE) == 64) {
+            stack.remove(DataComponents.MAX_STACK_SIZE);
+        }
+        if (stack.has(DataComponents.LORE) &&
+                stack.get(DataComponents.LORE) != null &&
+                stack.get(DataComponents.LORE) == ItemLore.EMPTY) {
+            stack.remove(DataComponents.LORE);
+        }
+        if (stack.has(DataComponents.ENCHANTMENTS) &&
+                stack.get(DataComponents.ENCHANTMENTS) != null &&
+                stack.get(DataComponents.ENCHANTMENTS) == ItemEnchantments.EMPTY) {
+            stack.remove(DataComponents.ENCHANTMENTS);
+        }
+        if (stack.has(DataComponents.REPAIR_COST) &&
+                stack.get(DataComponents.REPAIR_COST) != null &&
+                stack.get(DataComponents.REPAIR_COST) == 0) {
+            stack.remove(DataComponents.REPAIR_COST);
+        }
+        if (stack.has(DataComponents.ATTRIBUTE_MODIFIERS) &&
+                stack.get(DataComponents.ATTRIBUTE_MODIFIERS) != null &&
+                stack.get(DataComponents.ATTRIBUTE_MODIFIERS) == ItemAttributeModifiers.EMPTY) {
+            stack.remove(DataComponents.ATTRIBUTE_MODIFIERS);
+        }
+        if (stack.has(DataComponents.RARITY) &&
+                stack.get(DataComponents.RARITY) != null &&
+                stack.get(DataComponents.RARITY) == Rarity.COMMON) {
+            stack.remove(DataComponents.RARITY);
+        }
+    }
 }

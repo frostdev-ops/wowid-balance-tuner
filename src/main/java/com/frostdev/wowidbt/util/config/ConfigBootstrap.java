@@ -1,14 +1,9 @@
-package com.frostdev.wowidbt.util.modify;
+package com.frostdev.wowidbt.util.config;
 
 import blue.endless.jankson.JsonElement;
 import blue.endless.jankson.JsonObject;
 import blue.endless.jankson.api.SyntaxError;
-import com.frostdev.wowidbt.util.config.CoreModifierConfig;
-import com.frostdev.wowidbt.util.config.EntitiesConfig;
-import com.frostdev.wowidbt.util.config.ItemsConfig;
-import com.frostdev.wowidbt.wowidbt;
 import com.mojang.serialization.MapCodec;
-import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,8 +17,7 @@ public final class ConfigBootstrap {
 
     public static void init() throws IOException, SyntaxError {
         ConfigHolder.add("items",    ItemsConfig.CODEC,    ItemsConfig.DEFAULT,    ItemsConfig::process);
-        ConfigHolder.add("entities", EntitiesConfig.CODEC, EntitiesConfig.DEFAULT, EntitiesConfig::process);
-        ConfigHolder.add("core",    CoreModifierConfig.CODEC, CoreModifierConfig.DEFAULT, CoreModifierConfig::process);
+        ConfigHolder.add("core",    GetRecord.CODEC, GetRecord.DEFAULT, GetRecord::process);
         Path directory = Path.of("config","wowid");
         if (!Files.exists(directory)) {
             Files.createDirectory(directory);

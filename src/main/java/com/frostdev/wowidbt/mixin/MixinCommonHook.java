@@ -1,7 +1,7 @@
 package com.frostdev.wowidbt.mixin;
 
 
-import com.frostdev.wowidbt.util.modify.ConfigResults;
+import com.frostdev.wowidbt.util.config.ConfigResults;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;

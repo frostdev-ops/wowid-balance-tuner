@@ -2,14 +2,9 @@ package com.frostdev.wowidbt;
 
 import com.frostdev.wowidbt.event.MobEventRegister;
 import com.frostdev.wowidbt.util.Async;
-import com.frostdev.wowidbt.util.Getter;
-import com.frostdev.wowidbt.util.modify.Modifier;
+import com.frostdev.wowidbt.util.config.Getter;
+import com.frostdev.wowidbt.util.config.Modifier;
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -22,7 +17,6 @@ import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
-import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
 
 @Mod(wowidbt.MODID)

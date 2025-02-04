@@ -1,14 +1,12 @@
 package com.frostdev.wowidbt.util;
 
 import com.frostdev.wowidbt.event.DimEventRegister;
+import com.frostdev.wowidbt.util.config.Getter;
 import com.frostdev.wowidbt.wowidbt;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.AirBlock;
@@ -16,10 +14,7 @@ import net.minecraft.world.level.block.Block;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,7 +22,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.frostdev.wowidbt.util.Getter.*;
+import static com.frostdev.wowidbt.util.config.Getter.*;
 import static net.neoforged.neoforge.common.NeoForgeMod.CREATIVE_FLIGHT;
 
 public class Async {

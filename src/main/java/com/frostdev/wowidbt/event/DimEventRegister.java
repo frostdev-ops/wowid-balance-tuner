@@ -1,7 +1,7 @@
 package com.frostdev.wowidbt.event;
 
 import com.frostdev.wowidbt.util.Async;
-import com.frostdev.wowidbt.util.Getter;
+import com.frostdev.wowidbt.util.config.Getter;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.Event;

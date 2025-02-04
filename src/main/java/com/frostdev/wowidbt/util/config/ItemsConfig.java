@@ -1,7 +1,5 @@
 package com.frostdev.wowidbt.util.config;
 
-import com.frostdev.wowidbt.util.modify.ConfigHelper;
-import com.frostdev.wowidbt.util.modify.ConfigResults;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.lukebemish.codecextras.comments.CommentMapCodec;

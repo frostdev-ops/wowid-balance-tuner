@@ -1,4 +1,4 @@
-package com.frostdev.wowidbt.util.modify;
+package com.frostdev.wowidbt.util.config;
 
 import blue.endless.jankson.JsonElement;
 import com.frostdev.wowidbt.wowidbt;
