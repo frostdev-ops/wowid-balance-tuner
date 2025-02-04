@@ -403,8 +403,11 @@ public class Getter {
         JsonObject json = new JsonObject();
 
         for (Map.Entry<EntityType<?>, List<String>> entry : blackList.entrySet()) {
-            json.add(String.valueOf(Integer.parseInt(String.valueOf(BuiltInRegistries.ENTITY_TYPE.getId(entry.getKey())))), entry.getValue().stream()
-                    .collect(JsonArray::new, JsonArray::add, JsonArray::addAll));
+            JsonArray jsonArray = new JsonArray();
+            for (String string : entry.getValue()) {
+                jsonArray.add(string);
+            }
+            json.add(String.valueOf(BuiltInRegistries.ENTITY_TYPE.getId(entry.getKey())), jsonArray);
         }
 
         try (FileWriter writer = new FileWriter(file)) {

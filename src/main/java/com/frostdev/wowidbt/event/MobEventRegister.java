@@ -195,13 +195,13 @@ public class MobEventRegister {
                     }
                     if(debug)wowidbt.log("Checking for variance for attribute: " + attribute + " in tier: " + tier);
                     if (Getter.tierAttributeHasVariance(tier, attribute)) {
-                        wowidbt.log("Variance found for attribute: " + attribute + " in tier: " + tier);
+                        if (debug) wowidbt.log("Variance found for attribute: " + attribute + " in tier: " + tier);
                         editor.setVariance(Getter.getTierVariance(tier).get(attribute));
                     } else if (Getter.globalAttributeHasVariance(attribute)) {
                         wowidbt.log("Variance found for attribute: " + attribute + " in global");
                         editor.setVariance(Getter.getGlobalVariance(attribute));
                     }
-                    wowidbt.log("Setting attribute: " + attribute + " to: " + Getter.getTierAttributes(dimensionName).get(attribute));
+                    if (debug) wowidbt.log("Setting attribute: " + attribute + " to: " + Getter.getTierAttributes(dimensionName).get(attribute));
                     editor.setAttribute(attribute, Getter.getTierAttributes(dimensionName).get(attribute));
                 }
             } catch (Exception e) {
