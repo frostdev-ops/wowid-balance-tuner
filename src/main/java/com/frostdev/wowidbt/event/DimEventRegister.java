@@ -14,7 +14,6 @@ import java.util.*;
 import java.util.concurrent.Future;
 
 import static net.neoforged.neoforge.common.NeoForgeMod.CREATIVE_FLIGHT;
-
 @EventBusSubscriber(modid = "wowidbt")
 public class DimEventRegister {
 

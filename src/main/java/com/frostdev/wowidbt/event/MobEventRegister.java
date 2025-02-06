@@ -5,7 +5,6 @@ import com.frostdev.wowidbt.util.Async;
 import com.frostdev.wowidbt.util.config.Getter;
 import com.frostdev.wowidbt.wowidbt;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ambient.AmbientCreature;
 import net.minecraft.world.entity.animal.frog.Frog;
@@ -21,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.frostdev.wowidbt.util.config.Getter.getDimName;
-
 @EventBusSubscriber(modid = "wowidbt")
 public class MobEventRegister {
 
@@ -29,7 +27,7 @@ public class MobEventRegister {
         return Getter.getDebug();
     }
 
-    public static Map<EntityType<?>, List<String>> attributeBlacklist = new HashMap<>();
+    public static Map<String, List<String>> attributeBlacklist = new HashMap<>();
 
     @SubscribeEvent
     public static void onMobSpawn(EntityJoinLevelEvent event) {
@@ -217,12 +215,12 @@ public class MobEventRegister {
     private static boolean isAttributeBlacklisted(Entity entity, String attribute) {
         boolean debug = isDebug();
         if (debug) {
-            wowidbt.log("isAttributeBlacklisted called for entity: " + entity.getName() + " with attribute: " + attribute);
+            wowidbt.log("isAttributeBlacklisted called for entity: " + entity.getType().toString() + " with attribute: " + attribute);
         }
-        if (attributeBlacklist.containsKey(entity)) {
-            if (attributeBlacklist.get(entity).contains(attribute)) {
+        if (attributeBlacklist.containsKey(entity.getType().toString())) {
+            if (attributeBlacklist.get(entity.getType().toString()).contains(attribute)) {
                 if (debug) {
-                    wowidbt.log("Attribute: " + attribute + " is blacklisted for entity: " + entity.getName());
+                    wowidbt.log("Attribute: " + attribute + " is blacklisted for entity: " + entity.getType().toString());
                 }
                 return true;
             }

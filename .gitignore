@@ -32,3 +32,9 @@ Frostdev Property Modifier.spec
 *.py
 local_cache_items.json5
 /.vscode/launch.json
+/nutsfile.json
+/newweapons_new.json5
+/newweapons.json5
+/newbackup.json5
+/jamefile.json
+/gradlew.bat dependencyUpdates.bat dependencyUpdates.bat dependencyUpdates

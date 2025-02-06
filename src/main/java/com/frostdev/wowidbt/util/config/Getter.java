@@ -3,10 +3,10 @@ package com.frostdev.wowidbt.util.config;
 import com.frostdev.wowidbt.event.MobEventRegister;
 import com.frostdev.wowidbt.util.Async;
 import com.frostdev.wowidbt.wowidbt;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonArray;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -39,7 +39,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
 public class Getter {
      public static JsonObject jsonObject;
      public static final String CONFIG_FILE_PATH = "config/wowid/wowidbt.json";
@@ -410,22 +409,22 @@ public class Getter {
                 for (JsonElement element : jsonArray) {
                     list.add(element.getAsString());
                 }
-                MobEventRegister.attributeBlacklist.put(BuiltInRegistries.ENTITY_TYPE.byId(Integer.parseInt(entry.getKey())), list);
+                MobEventRegister.attributeBlacklist.put(entry.getKey(), list);
             }
         } catch (IOException e) {
             wowidbt.log("Error reading blacklist from entity_blacklist.json: " + e.getMessage());
         }
     }
-    public static void writeBlackListToFile(Map<EntityType<?>, List<String>> blackList) {
+    public static void writeBlackListToFile(Map<String, List<String>> blackList) {
         File file = new File("config/wowid/entity_blacklist.json");
         JsonObject json = new JsonObject();
 
-        for (Map.Entry<EntityType<?>, List<String>> entry : blackList.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : blackList.entrySet()) {
             JsonArray jsonArray = new JsonArray();
             for (String string : entry.getValue()) {
                 jsonArray.add(string);
             }
-            json.add(String.valueOf(BuiltInRegistries.ENTITY_TYPE.getId(entry.getKey())), jsonArray);
+            json.add(entry.getKey(), jsonArray);
         }
 
         try (FileWriter writer = new FileWriter(file)) {

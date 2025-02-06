@@ -3,23 +3,20 @@ package com.frostdev.wowidbt;
 import com.frostdev.wowidbt.event.MobEventRegister;
 import com.frostdev.wowidbt.util.Async;
 import com.frostdev.wowidbt.util.config.Getter;
-import com.frostdev.wowidbt.util.config.Modifier;
 import com.mojang.logging.LogUtils;
-import net.neoforged.bus.api.EventPriority;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
-import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import org.slf4j.Logger;
 
-@Mod(wowidbt.MODID)
+import static com.frostdev.wowidbt.wowidbt.MODID;
+
+@Mod(value = MODID, dist = Dist.DEDICATED_SERVER)
 public class wowidbt
 {
 
@@ -31,15 +28,7 @@ public class wowidbt
     private static final String LOG_PREFIX = "[WOWID Balance Tuner] ";
     public wowidbt(IEventBus bus, ModContainer modContainer)
     {
-        log("Getting Things moving....");
-        bus.addListener(this::commonSetup);
-        log("Common setup done");
-        bus.addListener(EventPriority.LOWEST, EntityAttributeModificationEvent.class, Modifier::entityAttributeModification);
-        log("Entity Attribute Modification done");
-        bus.addListener(EventPriority.LOWEST, ModifyDefaultComponentsEvent.class,     Modifier::modifyDefaultComponents);
-        log("Modify Default Components done");
-        bus.addListener(EventPriority.LOWEST, FMLLoadCompleteEvent.class,             Modifier::loadComplete);
-        log("Load Complete");
+
         Getter.safeInit(false);
         log("Getter initialized: " + Getter.isJsonInitialized());
         NeoForge.EVENT_BUS.register(this);
@@ -47,10 +36,7 @@ public class wowidbt
 
 
 
-    private void commonSetup(final FMLCommonSetupEvent event)
-    {
 
-    }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)

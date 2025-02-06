@@ -15,7 +15,6 @@ import java.util.Objects;
 import java.util.concurrent.Future;
 
 import static net.neoforged.neoforge.common.NeoForgeMod.CREATIVE_FLIGHT;
-
 @EventBusSubscriber(modid = "wowidbt")
 public class ItemEventRegister {
     private static final Map<Player, Future<?>> creativeFlightPlayers = new HashMap<>();

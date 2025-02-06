@@ -82,12 +82,12 @@ public class MobEdit {
     }
 
     private void attributeBlacklistAdd(String attribute) {
-        if (MobEventRegister.attributeBlacklist.containsKey(livingEntity.getType())) {
-            MobEventRegister.attributeBlacklist.get(livingEntity.getType()).add(attribute);
+        if (MobEventRegister.attributeBlacklist.containsKey(livingEntity.getType().toString())) {
+            MobEventRegister.attributeBlacklist.get(livingEntity.getType().toString()).add(attribute);
         } else {
             List<String> attributes = new ArrayList<>();
             attributes.add(attribute);
-            MobEventRegister.attributeBlacklist.put(livingEntity.getType(), attributes);
+            MobEventRegister.attributeBlacklist.put(livingEntity.getType().toString(), attributes);
         }
     }
 }
