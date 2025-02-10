@@ -99,7 +99,7 @@ public class EncounterManager {
                 e.printStackTrace();
             }
             String summary = String.format(
-                "Encounter Summary: Total Damage Taken: %,.1f, Total Damage Done: %,.1f, Entities Killed: %,d, Total Healed: %,.1f, Duration: %,d seconds",
+                "Encounter Summary: Total Damage Taken: %,.1f\nTotal Damage Done: %,.1f\nEntities Killed: %,d\nTotal Healed: %,.1f\nDuration: %,d seconds",
                 encounter.getTotalDamageTaken(),
                 encounter.getTotalDamageDealt(),
                 encounter.getEntitiesKilled(),
@@ -107,7 +107,7 @@ public class EncounterManager {
                 encounter.getEncounterDurationInSeconds()
             );
             encounter.player.sendSystemMessage(Component.literal(summary).withStyle(ChatFormatting.BOLD));
-            encounter.player.sendSystemMessage(Component.literal("DPS: ").withStyle(ChatFormatting.GREEN).append(String.format("%,.1f", encounter.getEncounterDPS())).withStyle(ChatFormatting.RED));
+            encounter.player.sendSystemMessage(Component.literal("DPS: ").withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.BOLD).append(String.format("%,.1f", encounter.getEncounterDPS())).withStyle(ChatFormatting.RED).withStyle(ChatFormatting.BOLD));
         };
 
         submit.run();
