@@ -1,6 +1,7 @@
 package com.frostdev.wowidbt.util.encounters;
 
 import com.google.gson.*;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -98,13 +99,15 @@ public class EncounterManager {
                 e.printStackTrace();
             }
             String summary = String.format(
-                "Encounter Summary: Total Damage Taken: %.1f, Total Damage Done: %.1f, Entities Killed: %d, Total Healed: %.1f",
+                "Encounter Summary: Total Damage Taken: %,.1f, Total Damage Done: %,.1f, Entities Killed: %,d, Total Healed: %,.1f, Duration: %,d seconds",
                 encounter.getTotalDamageTaken(),
                 encounter.getTotalDamageDealt(),
                 encounter.getEntitiesKilled(),
-                encounter.getTotalHealingReceived()
+                encounter.getTotalHealingReceived(),
+                encounter.getEncounterDurationInSeconds()
             );
-            encounter.player.sendSystemMessage(Component.literal(summary));
+            encounter.player.sendSystemMessage(Component.literal(summary).withStyle(ChatFormatting.BOLD));
+            encounter.player.sendSystemMessage(Component.literal("DPS: ").withStyle(ChatFormatting.GREEN).append(String.format("%,.1f", encounter.getEncounterDPS())).withStyle(ChatFormatting.RED));
         };
 
         submit.run();

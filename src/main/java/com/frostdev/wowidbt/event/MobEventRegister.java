@@ -188,7 +188,6 @@ public class MobEventRegister {
             try {
                 for (String attribute : Getter.getTierAttributes(dimensionName).keySet()) {
                     if (isAttributeBlacklisted(entity, attribute)){
-                        wowidbt.log("Attribute blacklisted: " + attribute + " for entity: " + entity.getName());
                         continue;
                     }
                     if(debug)wowidbt.log("Checking for variance for attribute: " + attribute + " in tier: " + tier);

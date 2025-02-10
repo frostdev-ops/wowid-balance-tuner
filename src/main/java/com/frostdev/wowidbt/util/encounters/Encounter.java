@@ -19,7 +19,6 @@ public class Encounter {
     List<LivingEntity> encounterEntities = new ArrayList<>();
     Map<Date, Map<String,Double>> entityHealing = new HashMap<>();
     UUID encounterID;
-    Boolean timedOut = false;
     public Encounter(Player player){
         this.player = player;
         this.encounterID = UUID.randomUUID();
@@ -28,7 +27,7 @@ public class Encounter {
 
     private Timer timeoutTimer;
 
-    private void resetTimeout() {
+    private void resetTimeout(Long delay) {
         if (timeoutTimer != null) {
             timeoutTimer.cancel();
         }
@@ -38,11 +37,11 @@ public class Encounter {
             public void run() {
                 EncounterManager.submitEncounter(Encounter.this);
             }
-        }, 30000);
+        }, delay);
     }
 
     public void updateDamageActivity() {
-        resetTimeout();
+        resetTimeout(30000L);
     }
     public void addIncomingDamage(IncomingDamage damage){
         updateDamageActivity();
@@ -73,7 +72,7 @@ public class Encounter {
 
         encounterEntities.remove(entity);
         if (encounterEntities.isEmpty()){
-            EncounterManager.submitEncounter(this);
+            resetTimeout(1000L);
         }
     }
 
@@ -97,6 +96,33 @@ public class Encounter {
     public Float getTotalHealingReceived(){
         return healingReceived.values().stream().reduce(0f, Float::sum);
     }
+
+    public Long getEncounterDurationInSeconds() {
+        if (incomingDamage.isEmpty() && outgoingDamage.isEmpty() && healingReceived.isEmpty() && encounterKills.isEmpty() && entityHealing.isEmpty()) {
+            return 0L;
+        }
+        Date firstEvent = Collections.min(Arrays.asList(
+            incomingDamage.keySet().stream().min(Date::compareTo).orElse(new Date()),
+            outgoingDamage.keySet().stream().min(Date::compareTo).orElse(new Date()),
+            healingReceived.keySet().stream().min(Date::compareTo).orElse(new Date()),
+            encounterKills.keySet().stream().min(Date::compareTo).orElse(new Date()),
+            entityHealing.keySet().stream().min(Date::compareTo).orElse(new Date())
+        ));
+        Date lastEvent = Collections.max(Arrays.asList(
+            incomingDamage.keySet().stream().max(Date::compareTo).orElse(new Date()),
+            outgoingDamage.keySet().stream().max(Date::compareTo).orElse(new Date()),
+            healingReceived.keySet().stream().max(Date::compareTo).orElse(new Date()),
+            encounterKills.keySet().stream().max(Date::compareTo).orElse(new Date()),
+            entityHealing.keySet().stream().max(Date::compareTo).orElse(new Date())
+        ));
+        return (lastEvent.getTime() - firstEvent.getTime()) / 1000;
+    }
+
+    public Double getEncounterDPS(){
+        return getTotalDamageDealt()/getEncounterDurationInSeconds();
+    }
+
+
 
 
 

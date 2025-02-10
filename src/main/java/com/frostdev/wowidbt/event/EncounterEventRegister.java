@@ -71,11 +71,16 @@ public class EncounterEventRegister {
         double damage = event.getAmount();
         double health = player.getHealth();
         if (EncounterManager.hasEncounter(player)){
-            if (EncounterManager.getEncounter(player).encounteredEntity((LivingEntity) event.getSource().getEntity())){
-                EncounterManager.getEncounter(player).addIncomingDamage(new IncomingDamage(damage, event.getSource(), (LivingEntity) event.getSource().getEntity(), health, player));
-            }else {
-                EncounterManager.getEncounter(player).addEncounterEntity((LivingEntity) event.getSource().getEntity());
-                EncounterManager.getEncounter(player).addIncomingDamage(new IncomingDamage(damage, event.getSource(), (LivingEntity) event.getSource().getEntity(), health,  player));
+            if (event.getSource().getEntity() instanceof LivingEntity) {
+
+                if (EncounterManager.getEncounter(player).encounteredEntity((LivingEntity) event.getSource().getEntity())) {
+                    EncounterManager.getEncounter(player).addIncomingDamage(new IncomingDamage(damage, event.getSource(), (LivingEntity) event.getSource().getEntity(), health, player));
+                } else {
+                    EncounterManager.getEncounter(player).addEncounterEntity((LivingEntity) event.getSource().getEntity());
+                    EncounterManager.getEncounter(player).addIncomingDamage(new IncomingDamage(damage, event.getSource(), (LivingEntity) event.getSource().getEntity(), health, player));
+                }
+            }else{
+                return;
             }
         }else {
             EncounterManager.addEncounter(player, new Encounter(player) {{
