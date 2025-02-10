@@ -77,7 +77,7 @@ public class EncounterManager {
                 file.getParentFile().mkdirs();
             }
 
-            String playerKey = encounter.player.getDisplayName().getString();
+            String playerKey = encounter.player.getStringUUID();
             JsonArray encounterArray = encounter.serialize();
             JsonObject playerObject;
 

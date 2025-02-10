@@ -18,6 +18,7 @@ public class Encounter {
     Map<Date, String> encounterKills = new HashMap<>();
     List<LivingEntity> encounterEntities = new ArrayList<>();
     Map<Date, Map<String,Double>> entityHealing = new HashMap<>();
+    private Float prevHeal = 0F;
     UUID encounterID;
     public Encounter(Player player){
         this.player = player;
@@ -54,6 +55,10 @@ public class Encounter {
     }
 
     public void addHealingReceived(float healing){
+        if (healing == prevHeal){
+            return;
+        }
+        prevHeal = healing;
         healingReceived.put(Time.from(Instant.now()), healing);
     }
 
