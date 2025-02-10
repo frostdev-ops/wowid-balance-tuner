@@ -2,6 +2,9 @@ package com.frostdev.wowidbt.util.config;
 
 
 import blue.endless.jankson.Jankson;
+import com.frostdev.wowidbt.util.tier.Tier;
+import com.frostdev.wowidbt.util.tier.TierRegistry;
+import com.frostdev.wowidbt.util.tier.TierSet;
 import com.frostdev.wowidbt.wowidbt;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.world.item.Item;
@@ -16,6 +19,7 @@ import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
 import org.jline.reader.SyntaxError;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +54,17 @@ public final class Modifier {
         } catch (blue.endless.jankson.api.SyntaxError e) {
             throw new RuntimeException(e);
         }
+    }
+    private static final List<Item> weapons = new ArrayList<>();
+    public static List<Item> getWeapons() {
+        if (weapons.isEmpty()){
+            for (Tier tier : TierRegistry.getTierList()) {
+                for (TierSet set : tier.getSets()) {
+                    weapons.addAll(set.getItems());
+                }
+            }
+        }
+        return weapons;
     }
     
     public static void modifyDefaultComponents(ModifyDefaultComponentsEvent event) {

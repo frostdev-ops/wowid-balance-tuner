@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.concurrent.Future;
 
 import static net.neoforged.neoforge.common.NeoForgeMod.CREATIVE_FLIGHT;
-@EventBusSubscriber(modid = "wowidbt")
+@EventBusSubscriber
 public class DimEventRegister {
 
     public static final Map<Player, Future<?>> noFlyZoneTasks = new HashMap<>();

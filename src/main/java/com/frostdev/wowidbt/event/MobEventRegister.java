@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.frostdev.wowidbt.util.config.Getter.getDimName;
-@EventBusSubscriber(modid = "wowidbt")
+@EventBusSubscriber
 public class MobEventRegister {
 
     private static boolean isDebug() {
